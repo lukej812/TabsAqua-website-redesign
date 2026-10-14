@@ -29,7 +29,7 @@ for (const viewport of viewports) {
   page.on("console", (m) => m.type() === "error" && console.error("console:", m.text()));
   await page.goto(url, { waitUntil: "networkidle" });
   await page.waitForTimeout(Number(process.env.WAIT ?? 3500));
-  if (process.env.FULL) {
+  if (process.env.FULL && !process.env.NOJS) {
     // Scroll through once so every scroll reveal has played, then return to the top.
     await page.evaluate(async () => {
       for (let y = 0; y < document.documentElement.scrollHeight; y += window.innerHeight / 2) {

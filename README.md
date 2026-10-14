@@ -73,8 +73,10 @@ Tests use your installed Google Chrome. To use Playwright's own browser instead,
 `npx playwright install chromium` and remove the `channel` line in
 `playwright.config.ts`.
 
-For design review, `node scripts/shoot-sections.mjs <url> <out-dir> 375 1280` saves a
-screenshot of every section (add `REDUCED=1` or `NOJS=1`).
+For design review, `./scripts/serve-test.sh` builds and serves the site on port 3200,
+then `node scripts/shoot-sections.mjs http://localhost:3200 <out-dir> 375 1280` saves a
+screenshot of every section (add `REDUCED=1` or `NOJS=1`), and `scripts/shoot.mjs`
+captures the first screen (`FULL=1` for the whole page).
 
 ## Every button works
 
@@ -118,7 +120,27 @@ the fixed header doesn't cover, and each piece below has its own test.
 Measured with Lighthouse on a production build (mobile, simulated slow 4G):
 
 <!-- lighthouse:start -->
-Numbers are added after measurement.
+Lighthouse 12, mobile, simulated slow 4G, on `next start` locally. Five alternating
+runs each; medians shown. "Before" is the Aquans framed-panel design (commit
+`b5367c9`), "after" is this design.
+
+| | Before | After |
+| --- | --- | --- |
+| Performance | 89 (89 to 89) | 93 (92 to 95) |
+| Accessibility | 100 | 100 |
+| Best Practices | 100 | 100 |
+| SEO | 100 | 100 |
+| First Contentful Paint | 1.1 s | 1.2 s |
+| Largest Contentful Paint | 3.8 s | 3.1 s |
+| Total Blocking Time | 46 ms | 60 ms |
+| Cumulative Layout Shift | 0 | 0 |
+| Speed Index | 1.1 s | 1.4 s |
+
+The largest paint is the hero headline. The hero canvas costs about 13 ms of script
+per second on desktop (about 0.4 ms per drawn frame at 30fps, around 1% of the main
+thread) and about 5 ms per second on a phone with the CPU slowed 4x. It draws nothing
+until the browser is idle, so it never delays the headline. The only other frame loop
+is GSAP ScrollTrigger's own empty keep-alive callback.
 <!-- lighthouse:end -->
 
 Guardrails, from the portfolio's profiling. Keep them when adding features.

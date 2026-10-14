@@ -23,8 +23,8 @@ const TAU = Math.PI * 2;
  * - pixel ratio capped at 1 on phones and 1.25 on desktop; the light is soft,
  *   so retina resolution buys nothing visible
  * - 30fps, or 24 on phones; fewer particles and caustic lines on small screens
- * - waits for the browser to go idle before animating, so it never competes
- *   with hydration or the first paint
+ * - waits for the browser to go idle before drawing anything, so it never
+ *   competes with hydration or the first paint
  * - pauses when scrolled offscreen or when the tab is hidden
  * - one still frame when reduced motion is preferred
  * - gradients and the particle sprite are built once per resize, not per frame
@@ -275,12 +275,11 @@ export function HeroCanvas({ className, causticsOnly = false }: Props) {
       raf = 0;
     };
 
-    // First frame right away (cheap), so the canvas fades in over the CSS water.
-    resize();
-    draw(start + 6000);
-    canvas.setAttribute("data-ready", "");
-
+    // Nothing is drawn until the browser is idle: the CSS water is the first
+    // frame, and the canvas fades in over it, so it never delays the headline.
+    let sized = false;
     const resizeObserver = new ResizeObserver(() => {
+      if (!sized) return;
       resize();
       if (!raf) draw(performance.now());
     });
@@ -299,7 +298,7 @@ export function HeroCanvas({ className, causticsOnly = false }: Props) {
     const onMotionChange = () => {
       if (reducedQuery.matches) {
         pause();
-        draw(start + 6000);
+        if (sized) draw(start + 6000);
       } else play();
     };
     reducedQuery.addEventListener("change", onMotionChange);
@@ -314,6 +313,10 @@ export function HeroCanvas({ className, causticsOnly = false }: Props) {
     if (finePointer) window.addEventListener("pointermove", onPointer, { passive: true });
 
     const startWhenIdle = () => {
+      sized = true;
+      resize();
+      draw(start + 6000);
+      canvas.setAttribute("data-ready", "");
       ready = true;
       play();
     };

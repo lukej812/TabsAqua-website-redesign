@@ -28,8 +28,8 @@ for (const width of (widths.length ? widths : ["375", "1280"]).map(Number)) {
   page.on("console", (m) => m.type() === "error" && console.error("console:", m.text()));
   await page.goto(url, { waitUntil: "networkidle" });
   await page.waitForTimeout(1500);
-  // Scroll through once so every reveal has played.
-  await page.evaluate(async () => {
+  // Scroll through once so every reveal has played (nothing hides without JS).
+  if (!process.env.NOJS) await page.evaluate(async () => {
     for (let y = 0; y < document.documentElement.scrollHeight; y += window.innerHeight / 2) {
       window.scrollTo(0, y);
       await new Promise((r) => setTimeout(r, 100));
@@ -42,8 +42,14 @@ for (const width of (widths.length ? widths : ["375", "1280"]).map(Number)) {
     await target.scrollIntoViewIfNeeded();
     await page.waitForTimeout(900);
     const file = path.join(out, `${id}-${suffix}.png`);
-    if (id === "guided-descent" || id === "top") await page.screenshot({ path: file });
-    else await target.screenshot({ path: file });
+    // Without JavaScript, Playwright can't inject styles, so take the viewport instead.
+    if (id === "guided-descent" || id === "top" || process.env.NOJS) await page.screenshot({ path: file });
+    else {
+      // Tall element captures repaint fixed chrome mid-image; hide it for these.
+      const style = await page.addStyleTag({ content: ".site-header,.book-bar,.skip-link{visibility:hidden!important}" });
+      await target.screenshot({ path: file });
+      await style.evaluate((el) => el.remove());
+    }
     console.log(file);
   }
   await context.close();
