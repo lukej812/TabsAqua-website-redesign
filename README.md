@@ -164,9 +164,10 @@ Live review link: **https://tabs-aquaquest-diving.vercel.app** (Vercel project
 `tabs-aquaquest-diving`). The first production deploy was made from this checkout with
 `npx vercel deploy --prod`. `.vercelignore` keeps local test builds out of the upload.
 
-To deploy again from a checkout: `npx vercel deploy --prod`. For automatic deploys,
-merge the redesign into `main` first, then connect the GitHub repository under the
-project's **Settings > Git** (production deploys from `main`).
+The project is connected to the GitHub repository: pull requests get preview
+deployments, and every push to `main` deploys production. Until the redesign is merged,
+`main` still holds the old design, so don't push to `main` before merging. To deploy
+from a checkout instead: `npx vercel deploy --prod`.
 
 Setting up a new project from scratch:
 
