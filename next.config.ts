@@ -12,7 +12,24 @@ import type { NextConfig } from "next";
  */
 const WIX_BOOKING_ORIGIN: string | null = null;
 
+/**
+ * Security headers, as in the portfolio. No Content-Security-Policy: a strict
+ * one would block the Google Maps embed behind "Show map".
+ */
+const securityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
+];
+
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  // Photo slots (public/photos/*) are served as AVIF or WebP at the sizes each slot asks for.
+  images: {
+    formats: ["image/avif", "image/webp"],
+    qualities: [75],
+  },
   // Tests build into their own folder so they never clash with a running dev server.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   cacheComponents: true,
@@ -24,6 +41,9 @@ const nextConfig: NextConfig = {
         as: "*.css",
       },
     },
+  },
+  async headers() {
+    return [{ source: "/(.*)", headers: securityHeaders }];
   },
   async redirects() {
     if (!WIX_BOOKING_ORIGIN) return [];

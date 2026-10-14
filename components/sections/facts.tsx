@@ -30,7 +30,7 @@ export function Facts() {
                   <span className="sr-only">
                     {spoken} {item.unit}
                   </span>
-                  <span className="fact__value" aria-hidden="true">
+                  <span className={`fact__value${item.figures ? "" : " fact__value--word"}`} aria-hidden="true">
                     {item.figures
                       ? item.figures.map((figure, f) => (
                           <span key={f} className="fact__number">

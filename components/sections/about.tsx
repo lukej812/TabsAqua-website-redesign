@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { Fragment, type CSSProperties } from "react";
 import { about, aboutCopy, isAsk, testimonial } from "@/content/site";
 import { Emph } from "../emph";
 import { AskTabitha, PhotoSlot } from "../ui";
@@ -38,9 +38,12 @@ export function About() {
           <blockquote className="testimonial__quote">
             <p>
               {quoteLines(testimonial.quote).map((line, i) => (
-                <span key={i} className="testimonial__line" data-reveal style={{ "--i": i } as CSSProperties}>
-                  {line}{" "}
-                </span>
+                <Fragment key={i}>
+                  {i > 0 && " "}
+                  <span className="testimonial__line" data-reveal style={{ "--i": i } as CSSProperties}>
+                    {line}
+                  </span>
+                </Fragment>
               ))}
             </p>
           </blockquote>

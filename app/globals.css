@@ -1408,6 +1408,7 @@ html.js .no-js-only {
 
 .ask-inline {
   display: inline-flex;
+  white-space: nowrap;
   align-items: center;
   min-height: 2.75rem;
   color: var(--sea-glass);
@@ -1437,7 +1438,8 @@ html.js .no-js-only {
 }
 
 .contact-line__value {
-  margin-right: 0.5rem;
+  flex-basis: 100%;
+  overflow-wrap: anywhere;
   font-family: var(--font-display-stack);
   font-size: clamp(1.4rem, 1.1rem + 1.2vw, 2.1rem);
   font-weight: 300;
@@ -1591,7 +1593,7 @@ html.js .no-js-only {
 
 .fact__value {
   font-family: var(--font-display-stack);
-  font-size: clamp(2.75rem, 1.9rem + 3vw, 4.5rem);
+  font-size: clamp(2.6rem, 1.9rem + 1.9vw, 3.75rem);
   font-weight: 200;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -1601,6 +1603,11 @@ html.js .no-js-only {
 .fact__sep {
   margin: 0 0.12em;
   color: var(--foam-subtle);
+}
+
+.fact__value--word .fact__unit {
+  display: block;
+  margin: 0.5rem 0 0;
 }
 
 .fact__unit {
@@ -1769,7 +1776,7 @@ html.js .no-js-only {
 
 .exp-card__specs > div {
   display: grid;
-  grid-template-columns: 6.5rem 1fr;
+  grid-template-columns: 5.25rem 1fr;
   gap: 1rem;
   align-items: center;
   min-height: 2.9rem;
@@ -1974,8 +1981,9 @@ html.js .no-js-only {
 .course {
   position: relative;
   display: grid;
-  grid-template-columns: 2.75rem 1fr;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
   gap: 1rem;
+  align-content: start;
 }
 
 .course__node {
@@ -1994,9 +2002,9 @@ html.js .no-js-only {
 }
 
 .course__body {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.6rem;
-  align-content: start;
   padding: clamp(1.4rem, 1.1rem + 1vw, 2rem);
   border-radius: var(--radius-card);
 }
@@ -2028,7 +2036,7 @@ html.js .no-js-only {
 
 .course__details > div {
   display: grid;
-  grid-template-columns: 6rem 1fr;
+  grid-template-columns: 5rem 1fr;
   gap: 1rem;
   align-items: center;
   border-bottom: 1px solid var(--hairline);
@@ -2040,7 +2048,8 @@ html.js .no-js-only {
 }
 
 .course__body .btn {
-  justify-self: start;
+  align-self: flex-start;
+  margin-top: auto;
 }
 
 @media (min-width: 1024px) {
@@ -2063,7 +2072,8 @@ html.js .no-js-only {
   }
 
   .course {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
     gap: 1.25rem;
   }
 }
@@ -2168,22 +2178,19 @@ html.js .no-js-only {
   text-wrap: balance;
 }
 
-.testimonial__quote p::before {
+/* One sentence per line; each reveals in turn. The quote marks are decoration. */
+.testimonial__line {
+  display: block;
+}
+
+.testimonial__line:first-child::before {
   content: "\201C";
   color: var(--sea-glass);
 }
 
-.testimonial__quote p::after {
+.testimonial__line:last-child::after {
   content: "\201D";
   color: var(--sea-glass);
-}
-
-.testimonial__line {
-  display: inline;
-}
-
-html.js .testimonial__line[data-reveal] {
-  display: inline-block;
 }
 
 .testimonial__by {
@@ -2237,10 +2244,132 @@ html.js .testimonial__line[data-reveal] {
 }
 
 .form {
+  position: relative;
   display: grid;
-  gap: 1.25rem;
+  gap: 1.5rem;
   padding: clamp(1.4rem, 1rem + 1.5vw, 2.25rem);
   border-radius: var(--radius-card);
+}
+
+.form__head {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.form__grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .form__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .field--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+  align-content: start;
+}
+
+.field label {
+  font-size: var(--text-small);
+  font-weight: 500;
+}
+
+.field__optional {
+  color: var(--foam-subtle);
+  font-weight: 400;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.7rem 0.95rem;
+  border: 1px solid var(--glass-line-strong);
+  border-radius: 0.85rem;
+  background: rgb(var(--scrim) / 0.55);
+  color: var(--foam);
+  font: inherit;
+  font-size: 1rem;
+  color-scheme: dark;
+  transition:
+    border-color var(--dur-hover) var(--ease),
+    box-shadow var(--dur-hover) var(--ease);
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field select {
+  appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%237fd6d0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  outline: none;
+  border-color: var(--sea-glass);
+  box-shadow: 0 0 0 3px rgb(127 214 208 / 0.25);
+}
+
+.field [aria-invalid="true"] {
+  border-color: #ff9a9e;
+}
+
+.field__error {
+  color: #ffb3b6;
+  font-size: 0.875rem;
+}
+
+.form__trap {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.form__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.form__via {
+  color: var(--foam-subtle);
+  font-size: 0.875rem;
+}
+
+.form__status:empty {
+  display: none;
+}
+
+.form__success {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  color: var(--foam);
+}
+
+.form__success svg {
+  flex: none;
+  margin-top: 0.15rem;
+  color: var(--sea-glass);
 }
 
 /* ==================================================================
@@ -2294,7 +2423,34 @@ html.js .testimonial__line[data-reveal] {
   inset: 6%;
   width: 88%;
   height: 88%;
-  opacity: 0.7;
+  opacity: 0.55;
+}
+
+.where__facade {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem;
+  border-radius: 1.25rem;
+  background: rgb(var(--scrim) / 0.75);
+}
+
+.where__note {
+  color: var(--foam-muted);
+  font-size: 0.875rem;
+}
+
+.where__iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
 }
 
 @media (min-width: 900px) {
@@ -2625,6 +2781,34 @@ html.js .testimonial__line[data-reveal] {
   .site-footer {
     padding-bottom: calc(2rem + 5rem + env(safe-area-inset-bottom));
   }
+}
+
+/* ==================================================================
+   404
+   ================================================================== */
+
+.not-found {
+  display: grid;
+  min-height: calc(100svh - 2 * var(--gutter));
+  place-items: center;
+  text-align: center;
+}
+
+.not-found__inner {
+  display: grid;
+  justify-items: center;
+  gap: 1.5rem;
+  max-width: 44rem;
+  padding: var(--pad);
+}
+
+.not-found__emblem {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.not-found__title {
+  font-size: var(--text-h1);
 }
 
 /* ==================================================================

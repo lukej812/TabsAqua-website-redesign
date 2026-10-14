@@ -1,8 +1,8 @@
 import { courseDetails, isAsk, meetCopy, meetingPoint } from "@/content/site";
 import { Emph } from "../emph";
 import { DirectionsIcon } from "../icons";
-import { BridgeLineArt } from "../illustrations";
 import { AskTabitha, CopyButton } from "../ui";
+import { MapFacade } from "./map-facade";
 
 export function WhereWeMeet() {
   const address = `${meetingPoint.name}, ${meetingPoint.street}, ${meetingPoint.locality}`;
@@ -31,7 +31,12 @@ export function WhereWeMeet() {
           {isAsk(courseDetails.location) && <AskTabitha topic={courseDetails.location} />}
         </div>
         <div className="where__map" data-reveal>
-          <BridgeLineArt className="where__art" />
+          <MapFacade
+            embedUrl={meetingPoint.embedUrl}
+            title={meetCopy.mapTitle}
+            button={meetCopy.showMap}
+            note={meetCopy.mapNote}
+          />
         </div>
       </div>
     </section>

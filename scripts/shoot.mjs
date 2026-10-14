@@ -29,6 +29,17 @@ for (const viewport of viewports) {
   page.on("console", (m) => m.type() === "error" && console.error("console:", m.text()));
   await page.goto(url, { waitUntil: "networkidle" });
   await page.waitForTimeout(Number(process.env.WAIT ?? 3500));
+  if (process.env.FULL) {
+    // Scroll through once so every scroll reveal has played, then return to the top.
+    await page.evaluate(async () => {
+      for (let y = 0; y < document.documentElement.scrollHeight; y += window.innerHeight / 2) {
+        window.scrollTo(0, y);
+        await new Promise((r) => setTimeout(r, 120));
+      }
+      window.scrollTo(0, 0);
+    });
+    await page.waitForTimeout(1200);
+  }
   const tag = `${viewport.width}x${viewport.height}${process.env.REDUCED ? "-reduced" : ""}${process.env.NOJS ? "-nojs" : ""}`;
   const file = path.join(out, `${process.env.NAME ?? "page"}-${tag}.png`);
   await page.screenshot({ path: file, fullPage: Boolean(process.env.FULL) });
