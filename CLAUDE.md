@@ -14,13 +14,20 @@ forms. Do not add Supabase, Stripe, or auth. Structure the code so they can be a
 ## Stack
 
 - Next.js (latest stable, App Router), TypeScript, Tailwind CSS
-- Statically rendered. No server actions, no API routes, no environment secrets
-- Fonts through `next/font`
+- Statically rendered (`ensureStatic = "navigation"`). No server actions, no API routes,
+  no environment secrets. One optional public variable, `NEXT_PUBLIC_FORM_ENDPOINT`
+  (a Formspree-compatible URL for the group form); without it the form opens a
+  pre-filled email
+- Fonts through `next/font`: Raleway (display) and Instrument Sans (body)
 - Deploy target: Vercel
-- Animation: CSS, plus GSAP + ScrollTrigger for the guided descent only (the owner
-  asked for it in Oct 2026). GSAP is lazy-loaded in idle time and must never enter the
-  initial bundle. Client components: `components/page-script.tsx` and the
-  `components/immersive/` guided descent. Everything else stays a Server Component
+- Animation: CSS, plus GSAP + ScrollTrigger for scroll-linked moments only: the guided
+  descent, the hero drift, the statement's word lighting, the course beam, and ray
+  parallax. GSAP is lazy-loaded in idle time and must never enter the initial bundle.
+  No Framer Motion or other animation libraries
+- Client components: `components/page-script.tsx` (reveals, copy buttons, pointer
+  effects, count-up), `components/motion/`, `components/hero/` (canvas, glow,
+  carousel, video card), the header, the group form, the map facade, and
+  `components/immersive/`. Everything else stays a Server Component
 
 ## Rule zero: do not invent business facts
 
@@ -88,66 +95,77 @@ confined-water practice, then open-water dives. Do not name an agency.
 - Whether Jacksonville is a service area. The phone number has a Jacksonville area code
   but make no Jacksonville claims
 - Real photos, logo files, and how Groupon customers redeem
+- Guided tour details (what happens, length, ages, what's included)
+- Social media accounts. Ship no social icons until a URL is confirmed in
+  `content/site.ts` (`social`)
 
 Never show: the "Test Tour" listing, or anything called "Service 11".
 
-## Design: framed panels (after the "Aquans" reference)
+## Design: deep sea (after the Dive Academy reference)
 
-Reference: https://dribbble.com/shots/21183479-Water-Brand-Ecommerce-Website. In Oct 2026
-the owner asked for the site to look like this shot. It replaced the earlier "Guided
-Descent" design (sand-to-navy background and side depth gauge), which is gone.
+Reference: https://dribbble.com/shots/22680505-Scuba-Diving-Dive-Academy-Website-Landing-Page-Inspiration.
+In Oct 2026 the owner asked for this look, with motion and build quality matching his
+portfolio (https://github.com/lukej812/portfolio, techniques only). It replaced the
+"Aquans" framed-panel design, which is in git history.
 
-One long page of rounded panels inside a thin white frame.
+One long page of rounded frames floating on deep navy. Dark only.
 
 ```
-HEADER   Links left, "Tabs AquaQuest" centered in the serif, Contact and Explore dives right
-HERO     Pale sky panel. Huge centered serif H1: "Take your first breath underwater, or
-         your next great dive." Primary button: Explore dives. Text link: New to scuba?
-         Start here. Illustrated sea below (or a real photo once supplied)
-DESCENT  "The guided descent": a 420vh section with a sticky stage. Scroll scrubs the
-         footage surface to reef; four chapters (Surface, First breath, The reef, Your
-         adventure) and a depth gauge follow one progress value. See
-         docs/video-production.md before changing it
-BLUE     Line-art scuba tank (the reference's bottle) with floating fact bubbles, dotted
-         waterlines under each heading, scalloped "See all dives" seal
-WHITE    "Three ways into the water": price row with thin dividers (the awards row)
-         Experiences: ice text panel beside a photo panel, each with a ring badge.
-           Guided tours as one wide blue panel. Price, time, ages, included, Book button
-BLUE     Get certified: Open Water, then Advanced, then Rescue, with the
-           online learning > confined water > open water timeline
-         Free underwater videos (only when videosIncluded is true)
-ICE      Meet Tabitha beside her portrait. Mandi K. testimonial, big centered serif
-PHOTO    Bring your people: heading over the group photo, occasions row below
-SPLIT    Where we meet: line-art bridge (blue) beside the address (ice)
-WHITE    FAQ
-BLUE     Ready when you are: phone, email, "Have a Groupon?" ticket
-FOOTER   Name left, links right
+HEADER   Fixed. Emblem and "Tabs AquaQuest" left; Experiences, Courses, About, Groups,
+         FAQ, Contact as uppercase micro-labels with a sliding active indicator; a glass
+         "Book a dive" pill. Transparent over the hero, a glass pill after 24px. Thin
+         scroll-progress line. Phones: full-screen menu
+HERO     The reference frame (100svh). Canvas underwater scene (caustics, god rays,
+         particles, bubble trails). H1 bottom left: "Take your first breath
+         *underwater.*" Lead "Or your next great dive." Explore dives + "New to scuba?
+         Start here". Left rail (call, email, directions). Glass objects right: media
+         card (bridge, or footage with a lightbox), the "I felt safe the whole time"
+         quote chip, and a scroll-snap carousel of the three experiences
+MARQUEE  Every service, a slow CSS loop
+DESCENT  "The guided descent". See docs/video-production.md before changing it
+FACTS    Count-up stats, verified numbers only
+EXPER.   Three large glass cards with tilt, spotlight, and a shimmer; Book buttons
+STATEMENT "The first breath feels strange. The second feels like *flying.*"
+COURSES  Open Water, Advanced, Rescue joined by a beam that fills on scroll; stages
+ABOUT    Portrait slot, intro, credentials Ask; Mandi K.'s testimonial, line by line
+GROUPS   Occasion chips, group size Ask, inquiry form (endpoint or mailto)
+WHERE    Address, directions, click-to-load Google map behind the line-art bridge
+FAQ      Native details as glass rows
+CONTACT  "Ready when *you are.*" Phone and email with copy buttons; Groupon ticket
+FOOTER   Emblem, links, phone, email, back to top, booking note
 ```
 
-- Palette: white, pale sky, ice (#e9f1f8), one ocean blue (#1f5b8a), navy text
-  (#173a5c), and a soft mist blue only for the second half of the "Three ways into the
-  water" heading. Diver-down flag red appears only in the buoy and Tabitha's badge.
-  Primary buttons are blue on light panels and white on blue panels. Tokens live on
-  `:root` in `app/globals.css`
-- Type: Newsreader for headlines (weight 400, tight tracking, centered as in the
-  reference), Instrument Sans for everything else. Not Inter or Space Grotesk
-- Signature: white line art on the ocean blue, with dotted waterlines, ring badges, and
-  the scalloped seal
-- Every panel sets `data-tone` (light or dark), which sets text, rules, focus rings, and
-  button colors, so contrast holds on every panel
-- Motion: floating bubbles, flowing waterlines, slowly turning badges, and the guided
-  descent. Paused offscreen, all off under `prefers-reduced-motion`. The descent falls
-  back to an editorial layout (still image, chapters in normal flow) for reduced
-  motion, no JavaScript, GSAP failure, data saver, slow connections, and short windows
-- Sticky header. On mobile, a sticky bottom Book action
-- "Have a Groupon?" tells voucher holders to call or email to schedule
-- Photos: none supplied yet. Use illustrations and clearly labeled photo slots listed in
-  `docs/asset-manifest.md`. No AI-generated or stock photos presented as Tabitha, her
+- Palette (tokens on `:root` in `app/globals.css`): abyss #0b1a2a (page), deep #10263b
+  (sections), ocean #1c4566, shallow #2f6f8f (light), foam #eaf4f8 (text) at 100%,
+  78% (body), and 68% (labels), sea-glass #7fd6d0 (the single accent: focus rings,
+  active nav, highlights). Flag red #e2363f only for the diver-down flag and favicon.
+  Glass is white at 7 to 12% with a white/16% hairline
+- Type: Raleway 200 and 300 for display, with italic on one to three emphasized words
+  (`*asterisks*` in `content/site.ts`), tight tracking, never bold. Instrument Sans
+  for body (16 to 18px), and for micro-labels at 12px, uppercase, 0.18em tracking
+- Shape: frames 28 to 32px radius, cards 20 to 24px, pills fully round, 1px hairlines
+- Glass rule: `.glass` is fill and border only. `backdrop-filter` (with `-webkit-`)
+  only on things over the moving hero or fixed: the header pill, the hero's glass
+  objects, the book bar, and modal backdrops. Never more than about six on screen
+- Emblem: a placeholder line-art diver among sea grass (`components/emblem.tsx`) until
+  her logo arrives. The favicon stays the diver-down flag
+- Photos: none supplied yet. Slots switch on when a file lands in `public/photos/`
+  (see `docs/asset-manifest.md`). No AI or stock photos presented as Tabitha, her
   customers, or her dive sites
+- Motion (the portfolio's vocabulary): one easing, `cubic-bezier(0.16, 1, 0.3, 1)`,
+  0.6 to 0.9s reveals and 0.2 to 0.3s hovers. Hero entrance is CSS on first paint,
+  under 600ms. Below the fold, a fade plus 24px rise, staggered, from one shared
+  IntersectionObserver. Magnetic primary buttons, card tilt up to 6 degrees with a
+  spotlight, a cursor glow in the hero, nudging arrows: fine pointers only. Animate
+  only transform and opacity. Pause loops offscreen and in hidden tabs
+- Reduced motion: no loops, parallax, tilt, or magnetic pull; the canvas draws one
+  still frame; all text fully visible; scroll effects rest at their end state. The
+  descent falls back to its editorial layout
 
-Avoid: purple gradients, glowing blobs, all-caps labels outside the price row, ring
-badges, and attributions, numbered 01/02/03 markers except on the real course timeline,
-two-tone headings anywhere but "Three ways into the water", "Dive into adventure" filler.
+Avoid: student counts, avatar stacks, star ratings, "Enroll now" (say "Book a dive"),
+social icons without verified URLs, night dives, agency names, Jacksonville, purple
+gradients, glowing blobs, numbered markers except on the real course steps, and
+"Dive into adventure" filler.
 
 ## Copy voice
 
@@ -156,13 +174,19 @@ trusting. Sentence case, active voice, short sentences, no em dashes.
 
 ## Quality bar
 
-- Semantic HTML, one h1, skip link, visible focus, 44px touch targets, WCAG 2.2 AA
-  contrast on every panel
-- `prefers-reduced-motion`: no floating, flowing, or turning animations. All content
-  still visible
-- Every section readable with JavaScript disabled. Nothing waits on a scroll trigger at
-  opacity 0
-- Works at 375, 768, and 1280 px with no horizontal scroll
+- Semantic HTML, one h1, skip link, visible sea-glass focus, 44px touch targets, WCAG
+  2.2 AA contrast on every surface, including text over the moving hero
+- `prefers-reduced-motion`: no loops, parallax, tilt, or magnetic pull. All content
+  visible, scroll effects at rest
+- Every section readable with JavaScript disabled. Content below the fold may start
+  hidden for its reveal only under these rules: it hides only after the boot script
+  adds `js` to `<html>` (so no-JS visitors see everything), the observer fires about
+  15% before an element enters the viewport, a failsafe shows everything after 3
+  seconds if the observer never starts, and reduced motion hides nothing
+- Works at 375, 768, 1280, and 1440 px with no horizontal scroll, in Chrome and in
+  WebKit (most visitors are on iPhones)
+- Every interactive element is in the README's "Every button works" table and has a
+  Playwright test
 - Metadata: real title and description, Open Graph tags, sitemap, robots. No
   LocalBusiness address until the owner confirms one
 - `next.config` redirects placeholder: note in the README that /book-online and

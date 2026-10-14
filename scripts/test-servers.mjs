@@ -3,15 +3,20 @@
  * other so the builds never write the same files at once:
  *   - port 3100: the site as it ships today (no guided descent media)
  *   - port 3101: a build that treats the media as present
- *     (GUIDED_DESCENT_TEST_ASSETS=1). Tests serve synthetic fixtures at the
- *     media paths, so this build never contains real or fake footage.
+ *     (GUIDED_DESCENT_TEST_ASSETS=1) and posts the group form to a test
+ *     endpoint. Tests serve synthetic fixtures at the media paths and mock
+ *     the endpoint, so this build never contains real footage or sends mail.
  * Stops both servers when Playwright stops this script.
  */
 import { spawn, spawnSync } from "node:child_process";
 
 const builds = [
   { port: 3100, distDir: ".next-test", env: {} },
-  { port: 3101, distDir: ".next-test-media", env: { GUIDED_DESCENT_TEST_ASSETS: "1" } },
+  {
+    port: 3101,
+    distDir: ".next-test-media",
+    env: { GUIDED_DESCENT_TEST_ASSETS: "1", NEXT_PUBLIC_FORM_ENDPOINT: "https://formspree.io/f/test-endpoint" },
+  },
 ];
 
 for (const build of builds) {

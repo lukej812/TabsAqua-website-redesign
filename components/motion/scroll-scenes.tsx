@@ -28,36 +28,44 @@ export function ScrollScenes() {
           gsap.registerPlugin(ScrollTrigger);
           ScrollTrigger.config({ ignoreMobileResize: true });
 
+          // Only this component's triggers. The guided descent owns its own and
+          // must never be refreshed from here.
+          const mine = new Set<InstanceType<typeof ScrollTrigger>>();
+          const track = (tween: gsap.core.Tween) => {
+            if (tween.scrollTrigger) mine.add(tween.scrollTrigger);
+          };
+
           const mm = gsap.matchMedia();
           mm.add("(prefers-reduced-motion: no-preference)", () => {
             const hero = document.querySelector<HTMLElement>(".hero");
             const drift = hero?.querySelector<HTMLElement>(".hero__inner");
             if (hero && drift) {
-              gsap.to(drift, {
+              track(gsap.to(drift, {
                 y: -80,
                 opacity: 0.15,
                 ease: "none",
                 scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true },
-              });
+              }));
             }
 
             const statement = document.querySelector<HTMLElement>("[data-statement]");
             const words = statement?.querySelectorAll<HTMLElement>("[data-word]");
             if (statement && words?.length) {
-              gsap.fromTo(
+              track(gsap.fromTo(
                 words,
-                { opacity: 0.16 },
+                // Unlit words stay at half strength, so they still pass AA as large text.
+                { opacity: 0.5 },
                 {
                   opacity: 1,
                   ease: "none",
                   stagger: 0.12,
                   scrollTrigger: { trigger: statement, start: "top 80%", end: "bottom 65%", scrub: 0.4 },
                 },
-              );
+              ));
             }
 
             for (const el of document.querySelectorAll<HTMLElement>("[data-parallax]")) {
-              gsap.fromTo(
+              track(gsap.fromTo(
                 el,
                 { y: -40 },
                 {
@@ -65,7 +73,7 @@ export function ScrollScenes() {
                   ease: "none",
                   scrollTrigger: { trigger: el.parentElement, start: "top bottom", end: "bottom top", scrub: true },
                 },
-              );
+              ));
             }
           });
 
@@ -74,22 +82,28 @@ export function ScrollScenes() {
           const fill = beam?.querySelector<HTMLElement>("[data-beam-fill]");
           if (beam && fill) {
             const scene = (axis: "scaleX" | "scaleY", start: string, end: string) => () => {
-              gsap.fromTo(
-                fill,
-                { [axis]: 0 },
-                { [axis]: 1, ease: "none", scrollTrigger: { trigger: beam, start, end, scrub: 0.6 } },
+              track(
+                gsap.fromTo(
+                  fill,
+                  { [axis]: 0 },
+                  { [axis]: 1, ease: "none", scrollTrigger: { trigger: beam, start, end, scrub: 0.6 } },
+                ),
               );
             };
             mm.add("(prefers-reduced-motion: no-preference) and (min-width: 1024px)", scene("scaleX", "top 80%", "top 30%"));
             mm.add("(prefers-reduced-motion: no-preference) and (max-width: 1023px)", scene("scaleY", "top 70%", "bottom 70%"));
           }
 
-          // Layout below can change after load (the guided descent switching to
-          // its tall layout, an FAQ opening), so re-measure when the page resizes.
+          // Layout can change after load (the guided descent switching to its
+          // tall layout, an FAQ opening), so re-measure these triggers when the
+          // page resizes. A global refresh would stall the descent's scrub.
           let timer = 0;
           const resize = new ResizeObserver(() => {
             window.clearTimeout(timer);
-            timer = window.setTimeout(() => ScrollTrigger.refresh(), 150);
+            timer = window.setTimeout(() => {
+              const alive = new Set(ScrollTrigger.getAll());
+              mine.forEach((trigger) => (alive.has(trigger) ? trigger.refresh() : mine.delete(trigger)));
+            }, 150);
           });
           resize.observe(document.body);
 

@@ -1,8 +1,9 @@
 import type { CSSProperties } from "react";
 import { groups, groupsCopy, isAsk } from "@/content/site";
+import { photoSrc } from "@/lib/photos";
 import { Emph } from "../emph";
 import { UsersIcon } from "../icons";
-import { AskTabitha } from "../ui";
+import { AskTabitha, PhotoSlot } from "../ui";
 import { GroupForm } from "./group-form";
 
 export function Groups() {
@@ -17,6 +18,11 @@ export function Groups() {
             </h2>
             <p className="lead">{groupsCopy.intro}</p>
           </div>
+          {photoSrc("group") && (
+            <div data-reveal>
+              <PhotoSlot id="group" ratio="16 / 10" sizes="(min-width: 1024px) 40vw, 100vw" />
+            </div>
+          )}
           <ul className="chips">
             {groups.occasions.map((occasion, i) => (
               <li key={occasion} className="chip glass" data-reveal style={{ "--i": i } as CSSProperties}>

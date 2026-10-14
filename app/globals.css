@@ -15,8 +15,8 @@
   --ocean: #1c4566; /* hero mid-tone, raised panels */
   --shallow: #2f6f8f; /* light rays and caustic tint */
   --foam: #eaf4f8; /* primary text */
-  --foam-muted: rgb(234 244 248 / 0.74); /* body copy */
-  --foam-subtle: rgb(234 244 248 / 0.62); /* labels and metadata; 52% failed AA on glass */
+  --foam-muted: rgb(234 244 248 / 0.78); /* body copy; 72% failed AA on glass over the ocean tone */
+  --foam-subtle: rgb(234 244 248 / 0.68); /* labels and metadata; 52% failed AA on glass */
   --sea-glass: #7fd6d0; /* the single accent: focus, active nav, small highlights */
   --flag-red: #e2363f; /* only the diver-down flag */
   --glass-fill: rgb(255 255 255 / 0.07);

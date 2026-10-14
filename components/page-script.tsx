@@ -12,6 +12,8 @@
  *   - pausing animations that are offscreen, or while the tab is hidden
  *   - magnetic buttons, card tilt and spotlight (mouse only), and the
  *     count-up numbers (components/motion/pointer-effects.ts)
+ *   - in-page links that still land on their section if the page grows
+ *     mid-jump (the guided descent switching to its tall layout)
  *
  * prefers-reduced-motion turns the animations off in CSS, and nothing is
  * hidden for a reveal.
@@ -47,6 +49,35 @@ export function PageScript() {
     );
     items.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
+  }, []);
+
+  // If the page changes height just after an in-page jump (the guided descent
+  // switches to its tall layout in idle time), aim at the target again.
+  useEffect(() => {
+    let jumpedAt = -Infinity;
+    const onClick = (event: MouseEvent) => {
+      if ((event.target as Element | null)?.closest('a[href^="#"]')) jumpedAt = performance.now();
+    };
+    const onHash = () => (jumpedAt = performance.now());
+    let height = document.documentElement.scrollHeight;
+    const resize = new ResizeObserver(() => {
+      const next = document.documentElement.scrollHeight;
+      if (next === height) return;
+      height = next;
+      if (performance.now() - jumpedAt > 2500 || !window.location.hash) return;
+      const smooth = window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
+      document
+        .getElementById(decodeURIComponent(window.location.hash.slice(1)))
+        ?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+    });
+    resize.observe(document.body);
+    document.addEventListener("click", onClick);
+    window.addEventListener("hashchange", onHash);
+    return () => {
+      resize.disconnect();
+      document.removeEventListener("click", onClick);
+      window.removeEventListener("hashchange", onHash);
+    };
   }, []);
 
   useEffect(() => startPointerEffects(), []);
