@@ -160,13 +160,25 @@ Guardrails, from the portfolio's profiling. Keep them when adding features.
 
 ## Deploy to Vercel
 
+Live review link: **https://tabs-aquaquest-diving.vercel.app** (Vercel project
+`tabs-aquaquest-diving`). The first production deploy was made from this checkout with
+`npx vercel deploy --prod`. `.vercelignore` keeps local test builds out of the upload.
+
+To deploy again from a checkout: `npx vercel deploy --prod`. For automatic deploys,
+merge the redesign into `main` first, then connect the GitHub repository under the
+project's **Settings > Git** (production deploys from `main`).
+
+Setting up a new project from scratch:
+
 1. Import the GitHub repository in Vercel (**Add New > Project**) and keep the
    detected Next.js settings. No environment variables are required.
 2. Deploy. Vercel builds with `npm run build`.
-3. Make sure the production deployment is public: **Settings > Deployment Protection**,
-   set Vercel Authentication to off for production (or "Only Preview Deployments").
-   Check with `curl -sI <production-url>`: it must return 200, not a 302 to
-   `vercel.com/sso-api`.
+3. Make sure the production deployment is public: **Settings > Deployment Protection**.
+   The default (Standard Protection) protects preview and per-deployment URLs but
+   leaves production domains public, which is what this site uses. Check with
+   `curl -sI <production-url>`: it must return 200, not a 302 to `vercel.com/sso-api`.
+   (A per-deployment URL such as `tabs-aquaquest-diving-<hash>.vercel.app` returning
+   302 is expected.)
 4. Before pointing a domain at it, read the booking links section below.
 
 ## Contact form (Formspree)
