@@ -19,7 +19,8 @@ forms. Do not add Supabase, Stripe, or auth. Structure the code so they can be a
   (a Formspree-compatible URL for the group form); without it the form opens a
   pre-filled email
 - Fonts through `next/font`: Raleway (display) and Instrument Sans (body)
-- Deploy target: Vercel
+- Deploy target: Vercel, with Vercel Web Analytics (cookieless, loaded only in Vercel
+  builds) and a "Book click" event on every booking link
 - Animation: CSS, plus GSAP + ScrollTrigger for scroll-linked moments only: the guided
   descent, the hero drift, the statement's word lighting, the course beam, and ray
   parallax. GSAP is lazy-loaded in idle time and must never enter the initial bundle.

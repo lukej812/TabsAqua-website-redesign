@@ -230,6 +230,24 @@ test.describe("every button works", () => {
     }
   });
 
+  test("every Book click is reported to Vercel Web Analytics", async ({ page }) => {
+    // Stand in for Vercel's script, and keep the click on this page.
+    await page.addInitScript(() => {
+      const w = window as unknown as { va: (...args: unknown[]) => void; __va: unknown[][] };
+      w.__va = [];
+      w.va = (...args) => w.__va.push(args);
+      window.addEventListener("click", (e) => (e.target as Element).closest("a[data-book]") && e.preventDefault(), true);
+    });
+    await page.goto("/");
+    await page.locator('#snorkeling a[data-book]').click();
+    await page.locator('#rescue a[data-book]').click();
+    const events = await page.evaluate(() => (window as unknown as { __va: unknown[][] }).__va);
+    expect(events).toEqual([
+      ["event", { name: "Book click", data: { service: "snorkeling", section: "experiences" }, options: undefined }],
+      ["event", { name: "Book click", data: { service: "rescue", section: "courses" }, options: undefined }],
+    ]);
+  });
+
   test("every in-page link points at a section that exists", async ({ page }) => {
     await page.goto("/");
     const missing = await page.evaluate(() =>

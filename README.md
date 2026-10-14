@@ -9,7 +9,8 @@ frosted-glass objects, and uppercase micro-labels. Motion and build quality foll
 code or content). Booking stays on Wix: every Book button links to her booking calendar.
 
 Built with Next.js (App Router), TypeScript, and Tailwind CSS. Fully static: no API
-routes, no server actions. One optional environment variable for the contact form.
+routes, no server actions. One optional environment variable for the contact form, and
+Vercel Web Analytics on deployed builds.
 
 ## Run it
 
@@ -101,7 +102,7 @@ the fixed header doesn't cover, and each piece below has its own test.
 | Card arrows | Hero carousel | That experience's full card (`#discover-scuba`, `#snorkeling`, `#guided-tours`) |
 | Scroll cue | Hero (wide screens) | `#guided-descent` |
 | Explore dives | Guided descent, last chapter | `#experiences` |
-| Book now | Each experience and course card | That service's Wix page: `bookingBase` + `bookingPath`, same tab |
+| Book now | Each experience and course card | That service's Wix page: `bookingBase` + `bookingPath`, same tab. Sends a "Book click" analytics event |
 | Ask Tabitha (inline) | Unconfirmed details | `#contact` |
 | Call / Email Tabitha | Ask Tabitha boxes, menu, footer, Groupon ticket | `tel:` and `mailto:` |
 | See Discover Scuba | Groups | `#discover-scuba` |
@@ -183,6 +184,20 @@ arrive directly instead:
 
 If the endpoint ever fails, the form falls back to the pre-filled email. Bots that
 fill the hidden `_gotcha` field are ignored.
+
+## Analytics (Vercel Web Analytics)
+
+Cookieless page views, so no consent banner is needed. Every Book button also sends a
+"Book click" event with the `service` (for example `snorkeling`) and the `section` it
+was clicked in (`experiences` or `courses`), so Tabitha can see which services people
+try to book. The script loads only in builds on Vercel (`VERCEL=1`), so local builds
+and tests load nothing.
+
+1. In Vercel, open the project's **Analytics** tab and click **Enable**.
+2. Redeploy. Page views appear within a few minutes of real visits.
+3. Book clicks appear under **Events**. Vercel only records custom events on the
+   **Pro** and **Enterprise** plans; on Hobby, page views work but the Book click
+   events are dropped until the project moves to Pro.
 
 ## Editing content
 

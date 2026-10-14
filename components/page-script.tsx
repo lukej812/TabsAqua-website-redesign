@@ -14,11 +14,14 @@
  *     count-up numbers (components/motion/pointer-effects.ts)
  *   - in-page links that still land on their section if the page grows
  *     mid-jump (the guided descent switching to its tall layout)
+ *   - a Vercel Web Analytics "Book click" event for every booking link, so
+ *     Tabitha can see which services people try to book
  *
  * prefers-reduced-motion turns the animations off in CSS, and nothing is
  * hidden for a reveal.
  */
 
+import { track } from "@vercel/analytics/react";
 import { useEffect, useState } from "react";
 import { startCountUp, startPointerEffects } from "./motion/pointer-effects";
 
@@ -78,6 +81,20 @@ export function PageScript() {
       document.removeEventListener("click", onClick);
       window.removeEventListener("hashchange", onHash);
     };
+  }, []);
+
+  // Which services people try to book. A no-op unless Vercel's script loaded.
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest<HTMLAnchorElement>("a[data-book]");
+      if (!link) return;
+      track("Book click", {
+        service: link.dataset.book ?? "unknown",
+        section: link.closest("section[id]")?.id ?? "page",
+      });
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
   }, []);
 
   useEffect(() => startPointerEffects(), []);

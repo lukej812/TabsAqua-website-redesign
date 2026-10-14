@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Sans, Raleway } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import { business, seo } from "@/content/site";
 import "./globals.css";
 
@@ -20,6 +21,13 @@ const body = Instrument_Sans({
   display: "swap",
   preload: false,
 });
+
+/**
+ * Vercel Web Analytics: cookieless page views (no banner needed), plus a
+ * "Book click" event per booking link (components/page-script.tsx). Only in
+ * builds on Vercel, which set VERCEL=1, so local builds and tests load nothing.
+ */
+const ANALYTICS = process.env.VERCEL === "1";
 
 // The whole site is prerendered. The build fails if anything makes it request-time.
 export const ensureStatic = "navigation";
@@ -63,7 +71,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {ANALYTICS && <Analytics />}
+      </body>
     </html>
   );
 }
