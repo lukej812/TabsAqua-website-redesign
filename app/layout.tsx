@@ -1,22 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Sans, Newsreader } from "next/font/google";
+import { Instrument_Sans, Raleway } from "next/font/google";
 import { business, seo } from "@/content/site";
 import "./globals.css";
 
-// Editorial serif for headlines. The optical-size axis keeps big headings crisp.
-const display = Newsreader({
+// Thin geometric display face, after the reference. Used at 200 and 300, upright
+// and italic. It's a variable font, so one file per style covers both weights.
+// The only preloaded font, because the hero headline is set in it.
+const display = Raleway({
   subsets: ["latin"],
   style: ["normal", "italic"],
-  axes: ["opsz"],
   variable: "--font-display",
   display: "swap",
 });
 
-// A clean grotesk for everything else, quiet like the reference's small text.
+// A clean grotesk for body copy, labels, and buttons.
 const body = Instrument_Sans({
   subsets: ["latin"],
   variable: "--font-body",
   display: "swap",
+  preload: false,
 });
 
 // The whole site is prerendered. The build fails if anything makes it request-time.
@@ -43,12 +45,24 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#0b1a2a",
+  colorScheme: "dark",
+  viewportFit: "cover",
 };
+
+/**
+ * Runs before first paint. Marks the page as scripted, so content below the
+ * fold may start hidden for its reveal, and sets a failsafe: if the reveal
+ * observer has not started within 3 seconds, everything shows.
+ */
+const bootScript = `(function(){var d=document.documentElement;d.classList.add("js");setTimeout(function(){if(!window.__revealReady)d.classList.add("reveal-all")},3000)})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+      </head>
       <body>{children}</body>
     </html>
   );

@@ -1,37 +1,44 @@
+import type { CSSProperties } from "react";
 import { groups, groupsCopy, isAsk } from "@/content/site";
-import { AskTabitha, PhotoSlot } from "../ui";
+import { Emph } from "../emph";
+import { UsersIcon } from "../icons";
+import { AskTabitha } from "../ui";
+import { GroupForm } from "./group-form";
 
-/** A big photo panel with the heading over it, like the reference's "Health in one glass". */
 export function Groups() {
   return (
-    <section id="groups" className="stack" aria-labelledby="groups-title">
-      <div className="panel groups-hero">
-        <PhotoSlot id="group" panel />
-        <div className="groups-hero__head" data-tone="dark">
-          <h2 id="groups-title" className="display">
-            {groupsCopy.title}
-          </h2>
-          <p className="lede">{groupsCopy.intro}</p>
-        </div>
-      </div>
-      <div className="panel panel--white" data-tone="light">
-        <div className="panel__inner wrap">
-          <ul className="occasions">
-            {groups.occasions.map((occasion) => (
-              <li key={occasion}>{occasion}</li>
+    <section id="groups" className="frame section groups" aria-labelledby="groups-title">
+      <div className="rays" aria-hidden="true" data-parallax />
+      <div className="container groups__grid">
+        <div className="groups__intro">
+          <div className="section-head" data-reveal>
+            <h2 id="groups-title" className="h2">
+              <Emph text={groupsCopy.title} />
+            </h2>
+            <p className="lead">{groupsCopy.intro}</p>
+          </div>
+          <ul className="chips">
+            {groups.occasions.map((occasion, i) => (
+              <li key={occasion} className="chip glass" data-reveal style={{ "--i": i } as CSSProperties}>
+                <UsersIcon size={18} />
+                {occasion}
+              </li>
             ))}
           </ul>
-          <div className="centered">
-            <p className="lede">{groups.note}</p>
-            <p>
-              <a className="text-link" href="#discover-scuba">
-                See Discover Scuba
-              </a>
-            </p>
-            {isAsk(groups.sizeLimits) && (
+          <p className="groups__note" data-reveal>
+            {groups.note}{" "}
+            <a className="text-link" href="#discover-scuba">
+              See Discover Scuba
+            </a>
+          </p>
+          {isAsk(groups.sizeLimits) && (
+            <div data-reveal>
               <AskTabitha topic={groups.sizeLimits}>{groupsCopy.askText}</AskTabitha>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
+        <div data-reveal style={{ "--i": 1 } as CSSProperties}>
+          <GroupForm />
         </div>
       </div>
     </section>

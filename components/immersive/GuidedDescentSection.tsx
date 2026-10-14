@@ -1,19 +1,6 @@
-import { existsSync } from "node:fs";
-import path from "node:path";
 import { guidedDescent } from "@/content/site";
+import { descentMediaPresent as present, GUIDED_DESCENT_TEST_ASSETS as TEST_ASSETS } from "@/lib/public-files";
 import { GuidedDescent, type DescentMedia } from "./GuidedDescent";
-
-/**
- * Test builds set this so the media paths count as present; Playwright then
- * serves synthetic fixtures at those paths. Never set it for a real deploy.
- */
-const TEST_ASSETS = process.env.GUIDED_DESCENT_TEST_ASSETS === "1";
-
-/** Whether a file exists in public/ at build time. */
-function present(publicPath: string): boolean {
-  if (TEST_ASSETS) return true;
-  return existsSync(path.join(process.cwd(), "public", publicPath));
-}
 
 /**
  * Server half of the guided descent. Works out which media files exist when

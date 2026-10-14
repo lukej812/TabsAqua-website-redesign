@@ -1,171 +1,138 @@
-import type { ReactNode } from "react";
+import Image from "next/image";
+import type { CSSProperties } from "react";
 import {
   experienceTerms,
   experiences,
   experiencesCopy,
   isAsk,
+  photos,
   services,
   type Experience,
   type Fact,
-  type PhotoId,
 } from "@/content/site";
-import { CheckIcon, FishIcon, MaskIcon, TankIcon } from "../icons";
-import { RingBadge } from "../illustrations";
-import { AskInline, BookButton, PhotoSlot } from "../ui";
+import { photoSrc } from "@/lib/photos";
+import { Emph } from "../emph";
+import { FishIcon, MaskIcon, TankIcon } from "../icons";
+import { AskInline, BookButton } from "../ui";
 
 const ICON = {
-  "discover-scuba": <TankIcon size={26} />,
-  snorkeling: <MaskIcon size={26} />,
-  "guided-tours": <FishIcon size={26} />,
+  "discover-scuba": <TankIcon size={28} />,
+  snorkeling: <MaskIcon size={28} />,
+  "guided-tours": <FishIcon size={28} />,
 } as const;
-
-/** Photo slot for each experience that has one. */
-const PHOTO: Partial<Record<Experience["serviceId"], PhotoId>> = {
-  "discover-scuba": "discover-scuba",
-  snorkeling: "snorkeling",
-};
 
 function Value({ fact }: { fact: Fact<string> }) {
   return isAsk(fact) ? <AskInline topic={fact} /> : <>{fact}</>;
 }
 
-function Details({ experience }: { experience: Experience }) {
+/**
+ * One large glass card. Tilt and the cursor spotlight are added by
+ * components/page-script.tsx on fine pointers (data-tilt). Its id lets the
+ * hero carousel deep link to it.
+ */
+function ExperienceCard({ experience, index }: { experience: Experience; index: number }) {
+  const { serviceId } = experience;
+  const service = services[serviceId];
+  const titleId = `${serviceId}-title`;
+  const photo = serviceId in photos ? photoSrc(serviceId as keyof typeof photos) : undefined;
+
   return (
-    <div className="exp__details">
-      <h4 className="steps-label">{experiencesCopy.stepsLabel}</h4>
-      {isAsk(experience.steps) ? (
-        <p>
-          <AskInline topic={experience.steps} />
-        </p>
-      ) : (
-        <ol className="steps">
-          {experience.steps.map((step) => (
-            <li key={step}>{step}</li>
-          ))}
-        </ol>
-      )}
-      <dl className="log">
-        <div className="log__row">
-          <dt>Time</dt>
-          <dd>
-            <Value fact={experience.duration} />
-          </dd>
-        </div>
-        <div className="log__row">
-          <dt>Ages</dt>
-          <dd>
-            <Value fact={experience.minimumAge} />
-          </dd>
-        </div>
-        <div className="log__row">
-          <dt>Included</dt>
-          <dd>
-            <Value fact={experience.included} />
-          </dd>
-        </div>
-        {experience.requirement && (
-          <div className="log__row">
-            <dt>Requires</dt>
-            <dd>{experience.requirement}</dd>
+    <div className="exp-slot" data-reveal style={{ "--i": index } as CSSProperties}>
+      <article id={serviceId} className="exp-card glass spotlight" data-tilt aria-labelledby={titleId}>
+        <span className="shimmer" aria-hidden="true">
+          <span />
+        </span>
+        {photo && (
+          <div className="exp-card__photo">
+            <Image
+              src={photo}
+              alt={photos[serviceId as keyof typeof photos].alt}
+              fill
+              sizes="(min-width: 1024px) 30vw, 100vw"
+            />
           </div>
         )}
-      </dl>
-    </div>
-  );
-}
+        <header className="exp-card__head">
+          <span className="exp-card__icon">{ICON[serviceId]}</span>
+          <p className="exp-card__price">
+            <span className="sr-only">Price: </span>
+            {service.price}
+          </p>
+        </header>
+        <h3 id={titleId} className="exp-card__name">
+          {service.name}
+        </h3>
+        {!isAsk(experience.tag) && <p className="exp-card__tag label">{experience.tag}</p>}
+        <p className="exp-card__summary">{experience.summary}</p>
 
-function Foot({ experience }: { experience: Experience }) {
-  const service = services[experience.serviceId];
-  return (
-    <div className="exp__foot">
-      <p className="price">
-        <span className="sr-only">Price: </span>
-        {service.price}
-      </p>
-      <BookButton id={experience.serviceId} />
-    </div>
-  );
-}
-
-function Badge({ experience }: { experience: Experience }) {
-  if (isAsk(experience.tag)) return null;
-  return <RingBadge id={experience.serviceId} text={experience.tag} icon={ICON[experience.serviceId]} />;
-}
-
-/** Text panel beside a photo panel, like the reference's "Our philosophy". */
-function SplitExperience({ experience, reverse }: { experience: Experience; reverse?: boolean }) {
-  const { serviceId } = experience;
-  const titleId = `${serviceId}-title`;
-  const photo = PHOTO[serviceId];
-  return (
-    <div className={`split${reverse ? " split--reverse" : ""}`}>
-      <article
-        id={serviceId}
-        className="panel panel--ice panel__inner exp exp--split"
-        data-tone="light"
-        data-anim
-        aria-labelledby={titleId}
-      >
-        <Badge experience={experience} />
-        <h3 id={titleId}>{services[serviceId].name}</h3>
-        <p className="exp__summary">{experience.summary}</p>
-        <Details experience={experience} />
-        <Foot experience={experience} />
-      </article>
-      {photo && <PhotoSlot id={photo} panel />}
-    </div>
-  );
-}
-
-/** A full-width blue panel for an experience with no photo yet. */
-function WideExperience({ experience }: { experience: Experience }) {
-  const { serviceId } = experience;
-  const titleId = `${serviceId}-title`;
-  return (
-    <article
-      id={serviceId}
-      className="panel panel--blue panel__inner exp exp--wide"
-      data-tone="dark"
-      data-anim
-      aria-labelledby={titleId}
-    >
-      <div className="exp__intro">
-        <Badge experience={experience} />
-        <h3 id={titleId}>{services[serviceId].name}</h3>
-        <p className="exp__summary">{experience.summary}</p>
-        <Foot experience={experience} />
-      </div>
-      <Details experience={experience} />
-    </article>
-  );
-}
-
-export function Experiences(): ReactNode {
-  return (
-    <section id="experiences" className="stack" aria-labelledby="experiences-title">
-      <div className="panel panel--white" data-tone="light">
-        <div className="panel__inner wrap centered">
-          <h2 id="experiences-title" className="display">
-            {experiencesCopy.title}
-          </h2>
-          <p className="lede">{experiencesCopy.intro}</p>
-          <ul className="terms">
-            {experienceTerms.map((term) => (
-              <li key={term}>
-                <CheckIcon size={18} />
-                {term}
-              </li>
+        <h4 className="exp-card__label label">{experiencesCopy.stepsLabel}</h4>
+        {isAsk(experience.steps) ? (
+          <p className="exp-card__ask">
+            <AskInline topic={experience.steps} />
+          </p>
+        ) : (
+          <ol className="exp-card__steps">
+            {experience.steps.map((step) => (
+              <li key={step}>{step}</li>
             ))}
-          </ul>
+          </ol>
+        )}
+
+        <dl className="exp-card__specs">
+          <div>
+            <dt>{experiencesCopy.timeLabel}</dt>
+            <dd>
+              <Value fact={experience.duration} />
+            </dd>
+          </div>
+          <div>
+            <dt>{experiencesCopy.agesLabel}</dt>
+            <dd>
+              <Value fact={experience.minimumAge} />
+            </dd>
+          </div>
+          <div>
+            <dt>{experiencesCopy.includedLabel}</dt>
+            <dd>
+              <Value fact={experience.included} />
+            </dd>
+          </div>
+          {experience.requirement && (
+            <div>
+              <dt>{experiencesCopy.requiresLabel}</dt>
+              <dd>{experience.requirement}</dd>
+            </div>
+          )}
+        </dl>
+
+        <p className="exp-card__fine">{experienceTerms.join(". ")}.</p>
+
+        <div className="exp-card__foot">
+          <BookButton id={serviceId} />
+          <p className="exp-card__note">{experiencesCopy.bookNote}</p>
+        </div>
+      </article>
+    </div>
+  );
+}
+
+export function Experiences() {
+  return (
+    <section id="experiences" className="frame section experiences" aria-labelledby="experiences-title">
+      <div className="rays" aria-hidden="true" data-parallax />
+      <div className="container">
+        <div className="section-head" data-reveal>
+          <h2 id="experiences-title" className="h2">
+            <Emph text={experiencesCopy.title} />
+          </h2>
+          <p className="lead">{experiencesCopy.intro}</p>
+        </div>
+        <div className="exp-grid">
+          {experiences.map((experience, i) => (
+            <ExperienceCard key={experience.serviceId} experience={experience} index={i} />
+          ))}
         </div>
       </div>
-      {experiences.map((experience, i) =>
-        PHOTO[experience.serviceId] ? (
-          <SplitExperience experience={experience} reverse={i % 2 === 1} key={experience.serviceId} />
-        ) : (
-          <WideExperience experience={experience} key={experience.serviceId} />
-        ),
-      )}
     </section>
   );
 }

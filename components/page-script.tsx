@@ -1,25 +1,49 @@
 "use client";
 
 /**
- * Site-wide client script (the guided descent has its own, in components/immersive).
+ * Site-wide client script (the header, hero, guided descent, and form have
+ * their own).
  *
  * Everything here is an enhancement. The server-rendered page is complete
- * without it, and every animation is plain CSS. The script adds:
+ * without it. The script adds:
+ *   - reveals: one shared IntersectionObserver fades and lifts [data-reveal]
+ *     elements about 15% before they enter the viewport
  *   - copy buttons for the phone number, email, and address
- *   - closing the mobile menu after a link is chosen, or on Escape
  *   - pausing animations that are offscreen, or while the tab is hidden
  *
- * prefers-reduced-motion turns the animations off in CSS.
+ * prefers-reduced-motion turns the animations off in CSS, and nothing is
+ * hidden for a reveal.
  */
 
 import { useEffect, useState } from "react";
 
+declare global {
+  interface Window {
+    /** Set once the reveal observer is running, so the boot script's failsafe stands down. */
+    __revealReady?: boolean;
+  }
+}
+
 export function PageScript() {
   const [status, setStatus] = useState("");
 
-  // Mark the page as scripted so copy buttons appear.
+  // Reveals. Elements start hidden only because the boot script in
+  // app/layout.tsx marked the page as scripted; reduced motion hides nothing.
   useEffect(() => {
-    document.documentElement.classList.add("js");
+    const items = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        window.__revealReady = true;
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.setAttribute("data-revealed", "");
+          observer.unobserve(entry.target);
+        }
+      },
+      { rootMargin: "0px 0px 15% 0px" },
+    );
+    items.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
 
   // Pause animated pieces while they are offscreen, and everything while the tab is hidden.
@@ -35,8 +59,7 @@ export function PageScript() {
     );
     animated.forEach((el) => io.observe(el));
 
-    const onVisibility = () =>
-      document.documentElement.toggleAttribute("data-hidden", document.hidden);
+    const onVisibility = () => document.documentElement.toggleAttribute("data-hidden", document.hidden);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       io.disconnect();
@@ -44,55 +67,35 @@ export function PageScript() {
     };
   }, []);
 
-  // Copy buttons and the mobile menu, by event delegation.
+  // Copy buttons, by event delegation.
   useEffect(() => {
     const timers = new Map<HTMLElement, number>();
 
     const onClick = async (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-
-      const copy = target.closest<HTMLButtonElement>("[data-copy]");
-      if (copy) {
-        const value = copy.dataset.copy ?? "";
-        const label = copy.dataset.copyLabel ?? "Text";
-        const text = copy.querySelector<HTMLElement>("[data-copy-text]");
-        try {
-          await navigator.clipboard.writeText(value);
-          setStatus(`${label} copied.`);
-          if (text) text.textContent = "Copied";
-        } catch {
-          setStatus(`Couldn't copy. Select the ${label.toLowerCase()} and copy it instead.`);
-        }
-        window.clearTimeout(timers.get(copy));
-        timers.set(
-          copy,
-          window.setTimeout(() => {
-            if (text) text.textContent = "Copy";
-          }, 2000),
-        );
-        return;
+      const copy = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-copy]");
+      if (!copy) return;
+      const value = copy.dataset.copy ?? "";
+      const label = copy.dataset.copyLabel ?? "Text";
+      const text = copy.querySelector<HTMLElement>("[data-copy-text]");
+      try {
+        await navigator.clipboard.writeText(value);
+        setStatus(`${label} copied.`);
+        if (text) text.textContent = "Copied";
+      } catch {
+        setStatus(`Couldn't copy. Select the ${label.toLowerCase()} and copy it instead.`);
       }
-
-      // Close the mobile menu once a link inside it is chosen, or on a click outside it.
-      document.querySelectorAll<HTMLDetailsElement>("details.menu[open]").forEach((menu) => {
-        if (!menu.contains(target) || target.closest("a")) menu.open = false;
-      });
-    };
-
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      const menu = document.querySelector<HTMLDetailsElement>("details.menu[open]");
-      if (menu) {
-        menu.open = false;
-        menu.querySelector("summary")?.focus();
-      }
+      window.clearTimeout(timers.get(copy));
+      timers.set(
+        copy,
+        window.setTimeout(() => {
+          if (text) text.textContent = "Copy";
+        }, 2000),
+      );
     };
 
     document.addEventListener("click", onClick);
-    document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("click", onClick);
-      document.removeEventListener("keydown", onKey);
       timers.forEach((t) => window.clearTimeout(t));
     };
   }, []);
