@@ -15,20 +15,20 @@ export function DescentScene() {
     >
       <defs>
         <linearGradient id="gd-water" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#dfeaf4" />
-          <stop offset="0.12" stopColor="#9bc8de" />
-          <stop offset="0.35" stopColor="#3f8fb5" />
-          <stop offset="0.65" stopColor="#1f5b8a" />
-          <stop offset="1" stopColor="#0c2e4c" />
+          <stop offset="0" stopColor="#5a9fb8" />
+          <stop offset="0.12" stopColor="#2f6f8f" />
+          <stop offset="0.35" stopColor="#1c4566" />
+          <stop offset="0.65" stopColor="#143553" />
+          <stop offset="1" stopColor="#0b1a2a" />
         </linearGradient>
         <linearGradient id="gd-ray" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.55" />
+          <stop offset="0" stopColor="#c8f0ee" stopOpacity="0.4" />
           <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
       </defs>
       <rect width="1440" height="2400" fill="url(#gd-water)" />
       {/* Surface */}
-      <path d="M0 230c180-30 360 18 540-6s360-28 540 0 260 22 360-4V0H0Z" fill="#f3f7fb" />
+      <path d="M0 230c180-30 360 18 540-6s360-28 540 0 260 22 360-4V0H0Z" fill="#7fbfd0" fillOpacity="0.55" />
       <path d="M0 230c180-30 360 18 540-6s360-28 540 0 260 22 360-4" fill="none" stroke="#ffffff" strokeWidth="3" />
       {/* Light rays from the surface */}
       <g fill="url(#gd-ray)">
@@ -56,14 +56,14 @@ export function DescentScene() {
       {/* Reef and seafloor */}
       <path
         d="M0 2160c80-40 150-50 220-20 40-60 110-80 170-40 50-50 130-50 180 10 60-30 130-26 180 20 50-40 120-50 190-10 40-50 120-60 180-10 60-30 140-30 200 20 50-20 80-24 120-10V2400H0Z"
-        fill="#0a2843"
+        fill="#0d2236"
       />
-      <g fill="none" stroke="#7fb3d5" strokeOpacity="0.55" strokeWidth="4" strokeLinecap="round">
+      <g fill="none" stroke="#7fd6d0" strokeOpacity="0.45" strokeWidth="4" strokeLinecap="round">
         <path d="M260 2170v-90m0 34-36-50m36 26 40-56m-40 92-58-20m58-4 52-30" />
         <path d="M1160 2160v-100m0 40 42-60m-42 36-46-54m46 88 62-24m-62-10-56-26" />
         <path d="M720 2180v-64m0 24-28-38m28 18 30-42" />
       </g>
-      <path d="M0 2330c200-30 460-40 720-12s520 30 720-6V2400H0Z" fill="#06192b" />
+      <path d="M0 2330c200-30 460-40 720-12s520 30 720-6V2400H0Z" fill="#081522" />
     </svg>
   );
 }

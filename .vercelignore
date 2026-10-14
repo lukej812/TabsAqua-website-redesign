@@ -1,0 +1,7 @@
+# Local build and test output. Vercel builds from source.
+.next*
+test-results
+playwright-report
+tests/fixtures
+.claude
+*.tsbuildinfo

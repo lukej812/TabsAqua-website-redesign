@@ -3,28 +3,27 @@ import type { ReactNode } from "react";
 import {
   bookingUrl,
   contact,
+  experiencesCopy,
   photos,
   services,
   type Ask,
-  type Photo,
   type PhotoId,
   type ServiceId,
 } from "@/content/site";
-import { CameraIcon, ChatIcon, CopyIcon, ExternalIcon, MailIcon, PhoneIcon } from "./icons";
+import { photoSrc } from "@/lib/photos";
+import { ArrowRightIcon, CameraIcon, ChatIcon, CopyIcon, MailIcon, PhoneIcon } from "./icons";
 
 /* ------------------------------------------------------------------ */
-/* Book buttons: every one links out to the Wix booking calendar       */
+/* Book buttons: every one links to that service's Wix booking page,   */
+/* in the same tab (it is her own domain).                              */
 /* ------------------------------------------------------------------ */
 
-export function BookButton({ id, small = false }: { id: ServiceId; small?: boolean }) {
-  // Colors come from the panel's tone: blue on light panels, white on blue ones.
+export function BookButton({ id, label = experiencesCopy.bookLabel }: { id: ServiceId; label?: string }) {
   return (
-    <a
-      className={`btn btn--primary${small ? " btn--small" : ""}`}
-      href={bookingUrl(id)}
-    >
-      See dates and book<span className="sr-only"> {services[id].name}</span>
-      <ExternalIcon size={18} />
+    <a className="btn btn--primary" href={bookingUrl(id)} data-magnetic data-book={id}>
+      {label}
+      <span className="sr-only">: {services[id].name}</span>
+      <ArrowRightIcon size={18} className="btn__icon btn__icon--nudge" />
     </a>
   );
 }
@@ -38,12 +37,10 @@ export function AskTabitha({ topic, children }: { topic: Ask; children?: ReactNo
   return (
     <div className="ask">
       <p className="ask__title">
-        <ChatIcon />
+        <ChatIcon size={20} />
         Ask Tabitha about {topic.ask}
       </p>
-      <p className="ask__text">
-        {children ?? "Not listed here yet. Call or email and Tabitha can tell you."}
-      </p>
+      <p className="ask__text">{children ?? "Not listed here yet. Call or email and Tabitha can tell you."}</p>
       <p className="ask__links">
         <a className="text-link" href={contact.phone.href}>
           Call {contact.phone.display}
@@ -69,14 +66,15 @@ export function AskInline({ topic }: { topic: Ask }) {
 /* Contact lines: selectable text, a copy button, and a tel/mailto link */
 /* ------------------------------------------------------------------ */
 
+/** Wired up by components/page-script.tsx. Hidden until that script runs. */
 export function CopyButton({ value, label }: { value: string; label: string }) {
-  // Wired up by components/descent.tsx. Hidden until that script runs.
   return (
     <button
       type="button"
-      className="btn btn--quiet btn--small js-only"
+      className="btn btn--glass btn--small js-only"
       data-copy={value}
       data-copy-label={label}
+      data-action="copy"
     >
       <CopyIcon size={18} />
       <span data-copy-text>Copy</span>
@@ -89,14 +87,10 @@ export function ContactLines() {
   return (
     <div className="contact-lines">
       <div className="contact-line">
-        <span className="contact-line__label">
-          Phone
-        </span>
+        <span className="contact-line__label label">Phone</span>
         <div className="contact-line__row">
-          <span className="contact-line__value">
-            {contact.phone.display}
-          </span>
-          <a className="btn btn--quiet btn--small" href={contact.phone.href}>
+          <span className="contact-line__value">{contact.phone.display}</span>
+          <a className="btn btn--glass btn--small" href={contact.phone.href}>
             <PhoneIcon size={18} />
             Call
           </a>
@@ -104,14 +98,10 @@ export function ContactLines() {
         </div>
       </div>
       <div className="contact-line">
-        <span className="contact-line__label">
-          Email
-        </span>
+        <span className="contact-line__label label">Email</span>
         <div className="contact-line__row">
-          <span className="contact-line__value">
-            {contact.email.display}
-          </span>
-          <a className="btn btn--quiet btn--small" href={contact.email.href}>
+          <span className="contact-line__value">{contact.email.display}</span>
+          <a className="btn btn--glass btn--small" href={contact.email.href}>
             <MailIcon size={18} />
             Email
           </a>
@@ -123,48 +113,42 @@ export function ContactLines() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Photo slots: a labeled placeholder until content/site.ts gives the  */
-/* photo a src. Every slot is listed in docs/asset-manifest.md.        */
+/* Photo slots: a labeled placeholder until a photo exists at          */
+/* public/photos/<slot id>.*. Every slot is in docs/asset-manifest.md. */
 /* ------------------------------------------------------------------ */
 
 export function PhotoSlot({
   id,
-  ratio = "4 / 3",
-  panel = false,
-  sizes = "(min-width: 900px) 50vw, 100vw",
+  ratio = "4 / 5",
+  sizes = "(min-width: 1024px) 40vw, 100vw",
+  className = "",
 }: {
   id: PhotoId;
   ratio?: string;
-  /** Fill a split panel's height instead of keeping a ratio (wide screens). */
-  panel?: boolean;
   sizes?: string;
+  className?: string;
 }) {
-  const photo: Photo = photos[id];
+  const photo = photos[id];
+  const src = photoSrc(id);
   return (
-    <figure
-      className={`photo-slot${panel ? " photo-slot--panel" : ""}`}
-      style={{ aspectRatio: ratio }}
-      data-asset={id}
-    >
-      {photo.src ? (
-        <Image src={photo.src} alt={photo.alt} fill sizes={sizes} className="photo-slot__img" />
+    <figure className={`photo-slot ${className}`} style={{ aspectRatio: ratio }} data-asset={id}>
+      {src ? (
+        <Image src={src} alt={photo.alt} fill sizes={sizes} className="photo-slot__img" />
       ) : (
         <>
           <svg
             className="photo-slot__art"
-            viewBox="0 0 400 300"
+            viewBox="0 0 400 500"
             preserveAspectRatio="xMidYMid slice"
             aria-hidden="true"
             focusable="false"
           >
-            <g fill="none" stroke="#ffffff" strokeOpacity="0.35" strokeWidth="1.5" strokeLinecap="round">
-              <path d="M-10 70c40-12 70-12 110 0s70 12 110 0 70-12 110 0 70 12 110 0" strokeDasharray="0.1 7" />
-              <path d="M-10 110c40-10 70-10 110 0s70 10 110 0 70-10 110 0 70 10 110 0" />
-            </g>
-            <g fill="none" stroke="#ffffff" strokeOpacity="0.5" strokeWidth="1.5">
-              <circle cx="300" cy="150" r="7" />
-              <circle cx="310" cy="124" r="4.5" />
-              <circle cx="304" cy="104" r="3" />
+            <g fill="none" stroke="#ffffff" strokeOpacity="0.4" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M-10 120c40-10 70-10 110 0s70 10 110 0 70-10 110 0 70 10 110 0" />
+              <path d="M60 0 20 500M150 0l-30 500M260 0l40 500" strokeOpacity="0.12" strokeWidth="30" />
+              <circle cx="300" cy="300" r="7" />
+              <circle cx="310" cy="270" r="4.5" />
+              <circle cx="304" cy="248" r="3" />
             </g>
           </svg>
           <figcaption>

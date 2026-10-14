@@ -1,48 +1,56 @@
 import { GuidedDescentSection } from "@/components/immersive/GuidedDescentSection";
+import { ScrollScenes } from "@/components/motion/scroll-scenes";
 import { PageScript } from "@/components/page-script";
+import { About } from "@/components/sections/about";
 import { BookBar } from "@/components/sections/book-bar";
-import { Certification } from "@/components/sections/certification";
+import { Contact } from "@/components/sections/contact";
+import { Courses } from "@/components/sections/courses";
 import { Experiences } from "@/components/sections/experiences";
+import { Facts } from "@/components/sections/facts";
 import { Faq } from "@/components/sections/faq";
-import { FinalCall } from "@/components/sections/final-call";
-import { FirstDive } from "@/components/sections/first-dive";
 import { SiteFooter } from "@/components/sections/footer";
 import { Groups } from "@/components/sections/groups";
 import { SiteHeader } from "@/components/sections/header";
 import { Hero } from "@/components/sections/hero";
-import { StartHere } from "@/components/sections/start-here";
-import { MeetTabitha } from "@/components/sections/tabitha";
+import { ServicesMarquee } from "@/components/sections/marquee";
+import { Statement } from "@/components/sections/statement";
 import { UnderwaterVideos } from "@/components/sections/videos";
 import { WhereWeMeet } from "@/components/sections/where-we-meet";
+import { StructuredData } from "@/components/structured-data";
 
 /**
- * One page of rounded panels inside a white frame: white, ice, and ocean blue.
- * Each panel sets its own tone, so text and focus colors always match what is behind them.
+ * One long page of rounded frames floating on deep water. The hero is the
+ * reference frame; every section below carries its language: dark water,
+ * thin type with italic accents, frosted glass, and uppercase micro-labels.
  */
 export default function Home() {
   return (
     <>
+      <div id="scroll-sentinel" className="scroll-sentinel" aria-hidden="true" />
       <a className="skip-link" href="#main">
         Skip to content
       </a>
       <SiteHeader />
-      <main id="main" tabIndex={-1} className="frame">
+      <main id="main" tabIndex={-1} className="page">
         <Hero />
+        <ServicesMarquee />
         <GuidedDescentSection />
-        <FirstDive />
-        <StartHere />
+        <Facts />
         <Experiences />
-        <Certification />
+        <Statement />
+        <Courses />
         <UnderwaterVideos />
-        <MeetTabitha />
+        <About />
         <Groups />
         <WhereWeMeet />
         <Faq />
-        <FinalCall />
+        <Contact />
       </main>
       <SiteFooter />
       <BookBar />
       <PageScript />
+      <ScrollScenes />
+      <StructuredData />
     </>
   );
 }

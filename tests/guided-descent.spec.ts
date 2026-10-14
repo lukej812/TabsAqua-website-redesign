@@ -291,7 +291,7 @@ test.describe("without media files", () => {
     await expect(page.locator(".gd__note")).toHaveCount(0);
     await scrollToProgress(page, 0.6);
     await settle(page, 0.6);
-    await expect(page.getByRole("heading", { name: guidedDescent.chapters[2].title })).toBeVisible();
+    await expect(page.locator("#guided-descent").getByRole("heading", { name: guidedDescent.chapters[2].title })).toBeVisible();
     expect(requests.filter((r) => r.startsWith("/video/") || r.startsWith("/images/guided-descent"))).toEqual([]);
     expect(errors).toEqual([]);
   });
@@ -318,7 +318,7 @@ test.describe("without media files", () => {
     expect(await section.locator(".gd__stage").evaluate((el) => getComputedStyle(el).position)).not.toBe("sticky");
     await expect(section.locator(".gd__bubble").first()).toBeHidden();
     for (const chapter of guidedDescent.chapters) {
-      const heading = page.getByRole("heading", { name: chapter.title });
+      const heading = page.locator("#guided-descent").getByRole("heading", { name: chapter.title });
       await heading.scrollIntoViewIfNeeded();
       await expect(heading).toBeVisible();
     }
@@ -334,7 +334,7 @@ test.describe("without media files", () => {
     const height = await section.evaluate((el) => (el as HTMLElement).offsetHeight);
     expect(height).toBeLessThan(3000);
     for (const chapter of guidedDescent.chapters) {
-      await expect(page.getByRole("heading", { name: chapter.title })).toBeVisible();
+      await expect(page.locator("#guided-descent").getByRole("heading", { name: chapter.title })).toBeVisible();
     }
     await context.close();
   });
@@ -353,7 +353,7 @@ test.describe("without media files", () => {
     const stage = page.locator("#guided-descent .gd__stage");
     expect(await stage.evaluate((el) => getComputedStyle(el).position)).not.toBe("sticky");
     for (const chapter of guidedDescent.chapters) {
-      const heading = page.getByRole("heading", { name: chapter.title });
+      const heading = page.locator("#guided-descent").getByRole("heading", { name: chapter.title });
       await heading.scrollIntoViewIfNeeded();
       await expect(heading).toBeVisible();
     }
@@ -439,7 +439,7 @@ test.describe("without media files", () => {
         const mid = (chapter.range[0] + chapter.range[1]) / 2;
         await scrollToProgress(page, mid);
         await settle(page, mid);
-        const title = page.getByRole("heading", { name: chapter.title });
+        const title = page.locator("#guided-descent").getByRole("heading", { name: chapter.title });
         await expect(title).toBeInViewport();
         await page.screenshot({
           path: `test-results/screenshots/descent-${viewport.width}x${viewport.height}-${i + 1}-${chapter.id}.png`,
@@ -472,7 +472,7 @@ test.describe("with video", () => {
       await settle(page, p);
       await expectVideoAt(page, p);
       const chapter = guidedDescent.chapters[chapterIndexAt(p, ranges)];
-      await expect(page.getByRole("heading", { name: chapter.title })).toBeVisible();
+      await expect(page.locator("#guided-descent").getByRole("heading", { name: chapter.title })).toBeVisible();
     }
     expect(errors).toEqual([]);
   });
@@ -573,7 +573,7 @@ test.describe("with video", () => {
     await expect.poll(() => poster.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
     await scrollToProgress(page, 0.8);
     await settle(page, 0.8);
-    await expect(page.getByRole("heading", { name: guidedDescent.chapters[3].title })).toBeVisible();
+    await expect(page.locator("#guided-descent").getByRole("heading", { name: guidedDescent.chapters[3].title })).toBeVisible();
   });
 
   test("does not load the video with reduced motion", async ({ browser }) => {

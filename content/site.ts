@@ -46,7 +46,7 @@ export const business = {
 } as const;
 
 export const seo = {
-  title: "Tabs AquaQuest Diving | Snorkeling and scuba with Tabitha",
+  title: "Tabs AquaQuest Diving | Snorkeling, Discover Scuba, and dive courses with Tabitha",
   description:
     "Instructor-led snorkeling, Discover Scuba for first-timers, guided tours for certified divers, and certification courses with Tabitha. Snorkel and scuba experiences meet at Phil Foster Park at Blue Heron Bridge.",
   ogImageAlt:
@@ -302,6 +302,8 @@ export const meetingPoint = {
   appliesTo: "Snorkel and scuba experiences",
   mapsUrl:
     "https://www.google.com/maps/search/?api=1&query=Phil+Foster+Park%2C+900+Blue+Heron+Blvd%2C+Riviera+Beach%2C+FL+33404",
+  /** Loaded only after a visitor presses "Show map". */
+  embedUrl: "https://www.google.com/maps?q=Phil+Foster+Park+Riviera+Beach+FL&output=embed",
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -311,6 +313,7 @@ export const meetingPoint = {
 export const groupon = {
   title: "Have a Groupon?",
   text: "Call or email to schedule your experience.",
+  toggle: "How to use it",
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -390,112 +393,200 @@ export const faq: FaqEntry[] = [
 /* ------------------------------------------------------------------ */
 /* Page copy                                                           */
 /* Headings and intros for each section. Facts above, words here.      */
+/* In headings, *asterisks* mark the words set in italic.              */
 /* ------------------------------------------------------------------ */
 
-export const hero = {
-  title: "Take your first breath underwater, or your next great dive.",
-  lede: "Snorkeling, Discover Scuba, guided tours, and certification courses with Tabitha. Every snorkel and scuba experience starts on shore with a briefing, so you know what comes next before you get wet.",
-  primaryCta: "Explore dives",
-  secondaryCta: "New to scuba? Start here",
+/** Header and menu links, in page order. Each `id` is a section on the page. */
+export const nav = [
+  { id: "experiences", label: "Experiences" },
+  { id: "courses", label: "Courses" },
+  { id: "about", label: "About" },
+  { id: "groups", label: "Groups" },
+  { id: "faq", label: "FAQ" },
+  { id: "contact", label: "Contact" },
+] as const;
+
+export const headerCopy = {
+  bookCta: "Book a dive",
+  menuOpen: "Open menu",
+  menuClose: "Close menu",
 } as const;
 
 /**
- * The blue line-art panel. The bubbles in the tank illustration repeat facts
- * from the text beside them, so keep the two in step.
+ * Social profiles. Only add a link once Tabitha confirms the account is hers.
+ * The hero rail and footer show an icon for each entry; none are verified yet.
  */
-export const firstDive = {
-  title: "Your first breath, made simple",
-  text: "Snorkel and scuba experiences start with a briefing on shore. Then you practice in shallow water before heading out with a guide.",
-  sideTitle: "Gear and briefing included",
-  sideText: "Plan on about 90 minutes from briefing to finish. Snorkeling starts at age 8 and scuba at 10. On Discover Scuba you practice in about three feet of water, then take a guided dive of roughly 30 minutes.",
-  bubbles: ["8+", "10+", "3 ft", "30 min"],
-  tankLabel: "90 min",
-  badge: "See all dives",
+export const social: { label: string; href: string }[] = [];
+
+export const hero = {
+  eyebrow: "Snorkel · Scuba · Certification",
+  title: "Take your first breath *underwater.*",
+  leadLine: "Or your next great dive.",
+  lede: "Snorkeling, Discover Scuba, guided tours, and certification courses, all with Tabitha.",
+  primaryCta: { label: "Explore dives", href: "#experiences" },
+  secondaryCta: { label: "New to scuba? Start here", href: "#discover-scuba" },
+  scrollCue: "Scroll",
+  /** A verbatim excerpt of the testimonial. A test checks it still matches. */
+  quoteChip: "I felt safe the whole time",
+  /** The hero's glass cards. Each fact must be verified above. */
+  cards: [
+    {
+      serviceId: "discover-scuba",
+      fact: "No experience needed. You practice in about three feet of water first.",
+    },
+    {
+      serviceId: "snorkeling",
+      fact: "From age 8. A safety briefing on shore, then a guided tour.",
+    },
+    {
+      serviceId: "guided-tours",
+      fact: "For certified divers who want a guided dive.",
+    },
+  ] satisfies { serviceId: Experience["serviceId"]; fact: string }[],
+  /** The media card when no footage exists yet. */
+  meetCard: { title: "Meet at Blue Heron Bridge", link: "See where we meet" },
+  /** The media card once guided descent footage exists. */
+  videoCard: {
+    title: "The guided descent",
+    play: "Play the guided descent video",
+    close: "Close video",
+  },
+  rail: {
+    call: `Call ${contact.phone.display}`,
+    email: "Email Tabitha",
+    directions: "Get directions",
+  },
 } as const;
 
-export type StartPath = {
-  label: string;
-  /** The price shown is this service's price, with "From" in front when `from` is true. */
-  price: { from: boolean; serviceId: ServiceId };
-  detail: string;
-  href: string;
-  link: string;
+export type Stat = {
+  id: string;
+  /** Small word above the figure, such as "About". */
+  lead?: string;
+  /** Numbers that count up. Their final values are in the server HTML. */
+  figures?: { value: number; suffix?: string }[];
+  /** Used instead of figures when the stat is not a number. */
+  word?: string;
+  unit?: string;
+  caption: string;
 };
 
-/** The price row under the blue panel. Prices come from `serviceList`. */
-export const startHere: {
-  title: string;
-  titleSoft: string;
-  intro: string;
-  paths: StartPath[];
-} = {
-  title: "Three ways",
-  titleSoft: "into the water",
-  intro: "Pick the one that sounds like you.",
-  paths: [
+/** The count-up row under the guided descent. Verified numbers only. */
+export const facts: { title: string; intro: string; items: Stat[] } = {
+  title: "Your first dive, *in numbers.*",
+  intro: "No surprises. Here is what a snorkel or scuba experience with Tabitha looks like.",
+  items: [
+    { id: "duration", lead: "About", figures: [{ value: 90 }], unit: "min", caption: "per experience, briefing included" },
+    { id: "practice", lead: "About", figures: [{ value: 3 }], unit: "ft", caption: "of water for your first practice" },
+    { id: "dive", lead: "About", figures: [{ value: 30 }], unit: "min", caption: "on your guided Discover Scuba dive" },
     {
-      label: "Never dived",
-      price: { from: true, serviceId: "snorkeling" },
-      detail: "Snorkeling or Discover Scuba",
-      href: "#discover-scuba",
-      link: "See beginner options",
+      id: "ages",
+      lead: "Ages",
+      figures: [{ value: 8, suffix: "+" }, { value: 10, suffix: "+" }],
+      caption: "8 and up to snorkel, 10 and up for scuba",
     },
-    {
-      label: "Want to get certified",
-      price: { from: false, serviceId: "open-water" },
-      detail: "Open Water Diver",
-      href: "#certification",
-      link: "See courses",
-    },
-    {
-      label: "Already certified",
-      price: { from: false, serviceId: "guided-tours" },
-      detail: "Professional guided tours",
-      href: "#guided-tours",
-      link: "See guided tours",
-    },
+    { id: "gear", lead: "All", word: "Gear", unit: "provided", caption: "for snorkel and scuba experiences" },
   ],
 };
 
 export const experiencesCopy = {
-  title: "Experiences",
-  intro: "Snorkel and scuba experiences meet at Phil Foster Park at Blue Heron Bridge. Good to know before you book:",
+  title: "Find your way *into the water.*",
+  intro:
+    "Snorkel and scuba experiences start with a briefing on shore and meet at Phil Foster Park at Blue Heron Bridge.",
   stepsLabel: "How it goes",
+  timeLabel: "Time",
+  agesLabel: "Ages",
+  includedLabel: "Included",
+  requiresLabel: "Requires",
+  bookLabel: "Book now",
+  bookNote: "You'll pick a time on our booking calendar.",
 } as const;
 
+/** The line that lights up word by word. It must not state anything unverified. */
+export const statement = "The first breath feels strange. The second feels like *flying.*";
+
 export const certificationCopy = {
-  title: "Get certified",
+  title: "Get *certified.*",
   intro: "Certification goes step by step. Start with Open Water Diver, then build on it with Advanced and Rescue.",
-  stagesTitle: "How courses run",
+  stepLabel: "Step",
+  stagesTitle: "How every course runs",
+  askLabels: { location: "Where", schedule: "When", inclusions: "Included" },
 } as const;
 
 export const aboutCopy = {
-  title: "Meet Tabitha",
-  badge: "Instructor-led snorkel and scuba",
+  title: "Meet *Tabitha.*",
+  portraitLabel: "Tabitha",
 } as const;
 
 export const groupsCopy = {
-  title: "Bring your people",
+  title: "Bring your *people.*",
   intro: "Celebrate in the water. Tabitha hosts groups for:",
   askText: "Tell Tabitha your date, your headcount, and the occasion.",
 } as const;
 
+/** The group inquiry form. See README for the Formspree setup. */
+export const groupForm = {
+  title: "Plan a group outing",
+  intro: "Tell Tabitha your date, your headcount, and the occasion. She will get back to you.",
+  labels: {
+    name: "Your name",
+    email: "Email",
+    phone: "Phone",
+    occasion: "Occasion",
+    date: "Preferred date",
+    size: "Group size",
+    message: "Anything else Tabitha should know?",
+  },
+  optional: "optional",
+  occasionPlaceholder: "Choose one",
+  occasionOther: "Something else",
+  submit: "Send inquiry",
+  sending: "Sending...",
+  viaEndpoint: "Sends to Tabitha's inbox.",
+  viaEmail: "Opens your email app.",
+  sent: "Thanks. Your inquiry is on its way to Tabitha.",
+  mailto: "Your email app should open with everything filled in. If it doesn't,",
+  mailtoLink: "email Tabitha directly",
+  errors: {
+    name: "Add your name so Tabitha knows who is asking.",
+    email: "Add an email address like name@example.com.",
+    occasion: "Choose an occasion, or pick Something else.",
+    date: "Pick today or a later date.",
+    size: "Enter how many people, as a whole number.",
+    summary: "Check the highlighted fields.",
+  },
+  subject: "Group inquiry",
+} as const;
+
 export const meetCopy = {
-  title: "Where we meet",
-  intro: "Snorkel and scuba experiences meet here:",
+  title: "Where we *meet.*",
+  label: "Meeting point for snorkel and scuba experiences",
   note: "It's a public park and our meeting point.",
-  mapsLabel: "Open in Google Maps",
+  directions: "Get directions",
+  showMap: "Show map",
+  mapNote: "The map loads from Google when you ask for it.",
+  mapTitle: "Map of Phil Foster Park at Blue Heron Bridge",
 } as const;
 
 export const faqCopy = {
-  title: "Questions before you book",
+  title: "Questions before you *book.*",
   intro: "Short answers to what people ask most. Anything else, just ask.",
 } as const;
 
 export const finalCopy = {
-  title: "Ready when you are.",
-  lede: "Pick an experience and book online, or reach out first. Nervous questions are welcome.",
-  cta: "Choose an experience",
+  title: "Ready when *you are.*",
+  lede: "Call, email, or pick an experience and book online. Nervous questions are welcome.",
+} as const;
+
+export const footerCopy = {
+  backToTop: "Back to top",
+  /** Names the booking host, so it stays right if Wix booking moves. */
+  bookingNote: `Booking happens on ${new URL(business.bookingBase).hostname.replace(/^www\./, "")}.`,
+} as const;
+
+export const notFoundCopy = {
+  title: "This page *drifted off.*",
+  text: "The link may be old, or the page moved. Everything you need is back at the surface.",
+  cta: "Back to the surface",
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -549,7 +640,7 @@ export const guidedDescent = {
     },
   ] satisfies DescentChapter[],
   cta: { label: "Explore dives", href: "#experiences" },
-  secondary: { label: "New to scuba? Start here", href: "#start-here" },
+  secondary: { label: "New to scuba? Start here", href: "#discover-scuba" },
   /** Shown whenever real footage plays, so nothing reads as a promise. */
   footageNote: "Marine life and conditions vary from dive to dive.",
   /**
@@ -570,10 +661,10 @@ export const guidedDescent = {
 
 /* ------------------------------------------------------------------ */
 /* Photos                                                              */
-/* None supplied yet. Each slot shows a labeled placeholder until it   */
-/* gets a `src`. Put the file in public/photos/ and set src here, for  */
-/* example src: "/photos/tabitha-portrait.jpg". See                    */
-/* docs/asset-manifest.md for sizes and what each photo should show.   */
+/* None supplied yet. Drop a file at public/photos/<slot id>.jpg (or   */
+/* .webp, .avif, .png) and rebuild: the slot switches on by itself.    */
+/* Then rewrite its `alt` below to describe what is actually in it.    */
+/* See docs/asset-manifest.md for sizes and what each photo shows.     */
 /* ------------------------------------------------------------------ */
 
 export type Photo = {
@@ -581,11 +672,12 @@ export type Photo = {
   caption: string;
   /** Alt text for the real photo. Describe what is actually in it. */
   alt: string;
+  /** Optional explicit path. Without it, public/photos/<slot id>.* is used. */
   src?: string;
 };
 
 export const photos = {
-  /** Optional. Until it has a src, the hero shows an illustrated sea instead. */
+  /** Optional. Until it exists, the hero shows the drawn underwater scene. */
   hero: {
     caption: "Calm water at the meeting point.",
     alt: "",
@@ -613,3 +705,14 @@ export const photos = {
 } satisfies Record<string, Photo>;
 
 export type PhotoId = keyof typeof photos;
+
+/**
+ * Optional looping hero video, relative to public/. When the mp4 exists it
+ * becomes the hero's base layer, with only the drawn caustics on top.
+ * Muted, no text, no audio. Under 4 MB.
+ */
+export const heroVideo = {
+  mp4: "/video/hero.mp4",
+  webm: "/video/hero.webm",
+  poster: "/images/hero-poster.webp",
+} as const;

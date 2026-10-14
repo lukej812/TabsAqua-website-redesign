@@ -5,14 +5,16 @@ import { PhotoSlot } from "../ui";
 export function UnderwaterVideos() {
   if (!business.videosIncluded) return null;
   return (
-    <section id="videos" className="split" aria-labelledby="videos-title">
-      <div className="panel panel--ice panel__inner centered" data-tone="light">
-        <h2 id="videos-title" className="display">
-          {videos.title}
-        </h2>
-        <p className="lede">{videos.text}</p>
+    <section id="videos" className="frame section videos" aria-labelledby="videos-title">
+      <div className="container split">
+        <div className="section-head" data-reveal>
+          <h2 id="videos-title" className="h2">
+            {videos.title}
+          </h2>
+          <p className="lead">{videos.text}</p>
+        </div>
+        <PhotoSlot id="underwater-video" ratio="4 / 3" />
       </div>
-      <PhotoSlot id="underwater-video" panel />
     </section>
   );
 }
