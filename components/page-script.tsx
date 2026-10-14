@@ -10,12 +10,15 @@
  *     elements about 15% before they enter the viewport
  *   - copy buttons for the phone number, email, and address
  *   - pausing animations that are offscreen, or while the tab is hidden
+ *   - magnetic buttons, card tilt and spotlight (mouse only), and the
+ *     count-up numbers (components/motion/pointer-effects.ts)
  *
  * prefers-reduced-motion turns the animations off in CSS, and nothing is
  * hidden for a reveal.
  */
 
 import { useEffect, useState } from "react";
+import { startCountUp, startPointerEffects } from "./motion/pointer-effects";
 
 declare global {
   interface Window {
@@ -45,6 +48,9 @@ export function PageScript() {
     items.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => startPointerEffects(), []);
+  useEffect(() => startCountUp(), []);
 
   // Pause animated pieces while they are offscreen, and everything while the tab is hidden.
   useEffect(() => {

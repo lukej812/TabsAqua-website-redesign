@@ -11,6 +11,11 @@ export function Facts() {
   return (
     <section id="first-dive" className="frame section facts" aria-labelledby="facts-title">
       <div className="rays" aria-hidden="true" data-parallax />
+      <div className="section-bubbles" aria-hidden="true" data-anim>
+        {Array.from({ length: 4 }, (_, i) => (
+          <span key={i} className="bubble" />
+        ))}
+      </div>
       <div className="container">
         <div className="section-head" data-reveal>
           <h2 id="facts-title" className="h2">

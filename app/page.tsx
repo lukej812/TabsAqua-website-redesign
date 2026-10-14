@@ -1,4 +1,5 @@
 import { GuidedDescentSection } from "@/components/immersive/GuidedDescentSection";
+import { ScrollScenes } from "@/components/motion/scroll-scenes";
 import { PageScript } from "@/components/page-script";
 import { About } from "@/components/sections/about";
 import { BookBar } from "@/components/sections/book-bar";
@@ -48,6 +49,7 @@ export default function Home() {
       <SiteFooter />
       <BookBar />
       <PageScript />
+      <ScrollScenes />
       <StructuredData />
     </>
   );

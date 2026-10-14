@@ -118,7 +118,7 @@ function ExperienceCard({ experience, index }: { experience: Experience; index: 
 
 export function Experiences() {
   return (
-    <section id="experiences" className="frame section experiences" aria-labelledby="experiences-title">
+    <section id="experiences" className="frame section experiences" aria-labelledby="experiences-title" data-anim>
       <div className="rays" aria-hidden="true" data-parallax />
       <div className="container">
         <div className="section-head" data-reveal>

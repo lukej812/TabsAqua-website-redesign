@@ -2643,6 +2643,7 @@ html.js .no-js-only {
 }
 
 /* A few rising bubbles in the dark sections. CSS only, paused offscreen. */
+.section-bubbles,
 .contact__bubbles {
   position: absolute;
   inset: 0;

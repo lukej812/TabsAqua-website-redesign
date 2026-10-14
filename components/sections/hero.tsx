@@ -199,7 +199,7 @@ export function Hero() {
         </div>
       </div>
 
-      <a className="hero__cue label" href="#guided-descent">
+      <a className="hero__cue label" href="#guided-descent" data-anim>
         {hero.scrollCue}
         <span className="hero__cue-line" aria-hidden="true" />
       </a>
