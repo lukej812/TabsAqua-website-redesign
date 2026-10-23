@@ -23,6 +23,9 @@ export function isAsk(value: unknown): value is Ask {
 /* Business                                                            */
 /* ------------------------------------------------------------------ */
 
+/** Updated each year at rebuild time. */
+export const copyrightYear = 2026;
+
 export const business = {
   name: "Tabs AquaQuest Diving",
   owner: "Tabitha",

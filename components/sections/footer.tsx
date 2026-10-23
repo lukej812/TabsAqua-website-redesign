@@ -1,4 +1,4 @@
-import { business, meetingPoint } from "@/content/site";
+import { business, copyrightYear, meetingPoint } from "@/content/site";
 import { NAV_LINKS, Wordmark } from "./header";
 
 export function SiteFooter() {
@@ -23,7 +23,7 @@ export function SiteFooter() {
           Snorkel and scuba experiences meet at {meetingPoint.name},{" "}
           {meetingPoint.locality.split(",")[0]}.
         </p>
-        <p>© {new Date().getFullYear()} {business.name}</p>
+        <p>© {copyrightYear} {business.name}</p>
       </div>
     </footer>
   );
