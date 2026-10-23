@@ -13,6 +13,9 @@ import type { NextConfig } from "next";
 const WIX_BOOKING_ORIGIN: string | null = null;
 
 const nextConfig: NextConfig = {
+  experimental: {
+    agentUpgrade: "security",
+  },
   // Tests build into their own folder so they never clash with a running dev server.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   cacheComponents: true,
