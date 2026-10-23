@@ -48,7 +48,7 @@ export const business = {
 export const seo = {
   title: "Tabs AquaQuest Diving | Snorkeling and scuba with Tabitha",
   description:
-    "Instructor-led snorkeling, Discover Scuba for first-timers, guided tours for certified divers, and certification courses with Tabitha. Snorkel and scuba experiences meet at Phil Foster Park at Blue Heron Bridge.",
+    "Instructor-led snorkeling, Discover Scuba for first-timers, guided tours for certified divers, and certification courses with Tabitha. Snorkel and scuba experiences meet at Phil Foster Park at Blue Heron Bridge, Riviera Beach, FL.",
   ogImageAlt:
     "Tabs AquaQuest Diving. Take your first breath underwater, or your next great dive.",
 } as const;
@@ -186,7 +186,7 @@ export const experiences: Experience[] = [
   {
     serviceId: "guided-tours",
     tag: "Certified divers",
-    summary: "Already certified? Book a guided dive.",
+    summary: "Already certified? Come out for a guided dive and see the marine life at Blue Heron Bridge with Tabitha.",
     steps: ask("what happens on a guided tour"),
     duration: ask("how long a guided tour runs"),
     minimumAge: ask("the minimum age for guided tours"),
@@ -394,7 +394,7 @@ export const faq: FaqEntry[] = [
 
 export const hero = {
   title: "Take your first breath underwater, or your next great dive.",
-  lede: "Snorkeling, Discover Scuba, guided tours, and certification courses with Tabitha. Every snorkel and scuba experience starts on shore with a briefing, so you know what comes next before you get wet.",
+  lede: "Snorkeling, Discover Scuba, guided tours, and certification courses with Tabitha. Snorkel and scuba experiences meet at Phil Foster Park at Blue Heron Bridge, Riviera Beach, FL.",
   primaryCta: "Explore dives",
   secondaryCta: "New to scuba? Start here",
 } as const;
@@ -493,7 +493,7 @@ export const faqCopy = {
 } as const;
 
 export const finalCopy = {
-  title: "Ready when you are.",
+  title: "Ready when you are",
   lede: "Pick an experience and book online, or reach out first. Nervous questions are welcome.",
   cta: "Choose an experience",
 } as const;

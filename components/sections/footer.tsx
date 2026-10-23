@@ -23,7 +23,7 @@ export function SiteFooter() {
           Snorkel and scuba experiences meet at {meetingPoint.name},{" "}
           {meetingPoint.locality.split(",")[0]}.
         </p>
-        <p>© {business.name}</p>
+        <p>© {new Date().getFullYear()} {business.name}</p>
       </div>
     </footer>
   );
