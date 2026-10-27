@@ -1001,6 +1001,17 @@ main:focus {
   overflow-x: clip;
 }
 
+/* Each zone's own water color, on a layer that fades out once the 3D world is
+   painted behind the dive, so the world shows through as one continuous place. */
+.zone::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--zone-bg, none);
+  transition: opacity 0.9s ease;
+  pointer-events: none;
+}
+
 .zone__inner {
   position: relative;
   z-index: 1;
@@ -1024,19 +1035,7 @@ main:focus {
   margin-inline: auto;
 }
 
-@media (min-width: 900px) {
-  .zone__head--split {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: end;
-    gap: 3rem;
-    max-width: none;
-  }
 
-  .zone__head--split .lede {
-    margin: 0 0 0.4rem;
-  }
-}
 
 /* Light from the surface, falling at an angle. Static, very faint. */
 .zone__rays {
@@ -1071,7 +1070,7 @@ main:focus {
 /* ------------------------------------------------------------------ */
 
 .zone--reef {
-  background: linear-gradient(180deg, var(--deep) 0, #08304e 55%, var(--reef-bg) 100%);
+  --zone-bg: linear-gradient(180deg, var(--deep) 0, #08304e 55%, var(--reef-bg) 100%);
 }
 
 .zone--reef .zone__inner {
@@ -1110,11 +1109,11 @@ main:focus {
   scroll-margin-top: calc(var(--header-h) + 1rem);
 }
 
-@media (min-width: 900px) {
-  .exp {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-    gap: clamp(3rem, 7vw, 7rem);
-  }
+/* One editorial column on the left: the right of the screen is the reef. */
+.exp-list,
+.line,
+.stages {
+  max-width: 44rem;
 }
 
 .exp__tag {
@@ -1276,7 +1275,7 @@ main:focus {
 /* ------------------------------------------------------------------ */
 
 .zone--deeper {
-  background: linear-gradient(180deg, var(--reef-near) 0, var(--abyss) 45%, #062038 100%);
+  --zone-bg: linear-gradient(180deg, var(--reef-near) 0, var(--abyss) 45%, #062038 100%);
 }
 
 .line {
@@ -1394,10 +1393,10 @@ main:focus {
   list-style: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .stages__list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 2.5rem;
+    gap: 2rem;
   }
 }
 
@@ -1434,20 +1433,14 @@ main:focus {
 /* ------------------------------------------------------------------ */
 
 .zone--safety {
-  background: linear-gradient(180deg, #062038 0, #0a3352 50%, #0f4568 100%);
+  --zone-bg: linear-gradient(180deg, #062038 0, #0a3352 50%, #0f4568 100%);
 }
 
+/* One column, like every section of the dive: the right side belongs to the water. */
 .about {
   display: grid;
-  gap: 3rem;
-}
-
-@media (min-width: 900px) {
-  .about {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: clamp(3rem, 7vw, 7rem);
-    align-items: start;
-  }
+  gap: clamp(3rem, 7vh, 4.5rem);
+  max-width: 44rem;
 }
 
 .about__para {
@@ -1461,11 +1454,9 @@ main:focus {
   margin-top: 2rem;
 }
 
+/* A list, not a card: ruled lines, like a dive briefing slate. */
 .essentials {
-  padding: clamp(1.5rem, 3vw, 2.25rem);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  background: rgb(255 255 255 / 0.035);
+  max-width: 38rem;
 }
 
 .essentials__title {
@@ -1499,9 +1490,8 @@ main:focus {
 }
 
 .quote {
-  max-width: 54rem;
-  margin: clamp(5rem, 13vh, 8rem) auto 0;
-  text-align: center;
+  max-width: 44rem;
+  margin: clamp(5rem, 13vh, 8rem) 0 0;
 }
 
 .quote blockquote p {
@@ -1569,20 +1559,17 @@ main:focus {
 
 .zone--ascent {
   --fg-muted: #dbeaf2;
-  background: linear-gradient(180deg, #0f4568 0, var(--ascent) 60%, var(--ascent-top) 100%);
+  --zone-bg: linear-gradient(180deg, #0f4568 0, var(--ascent) 60%, var(--ascent-top) 100%);
 }
 
 .groups {
   display: grid;
-  gap: 3rem;
+  gap: clamp(3rem, 7vh, 4.5rem);
+  max-width: 44rem;
 }
 
-@media (min-width: 960px) {
-  .groups {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 30rem);
-    gap: clamp(3rem, 7vw, 7rem);
-    align-items: start;
-  }
+.groups__planner {
+  max-width: 34rem;
 }
 
 .groups__text > p:not(.kicker):not(.lede) {
@@ -1780,11 +1767,21 @@ main:focus {
 /* ------------------------------------------------------------------ */
 
 .zone--shore {
+  background: var(--shore);
+}
+
+/* The surface seen from below, at the very end of the dive. It sits at the
+   bottom of the ascent, over the water (or the 3D world), and its fill is the
+   shore's color, so the shore section continues it without a seam. */
+.zone--ascent {
   --edge: clamp(3.5rem, 8vw, 7.5rem);
-  background: linear-gradient(180deg, var(--ascent-top) 0, var(--ascent-top) var(--edge), var(--shore) var(--edge));
+  padding-bottom: var(--edge);
 }
 
 .surface-edge {
+  position: absolute;
+  inset: auto 0 -1px;
+  z-index: 1;
   display: block;
   width: 100%;
   height: var(--edge);
@@ -2363,7 +2360,7 @@ main:focus {
 }
 
 .zone--videos {
-  background: #062038;
+  --zone-bg: #062038;
 }
 
 /* ==================================================================
@@ -2566,6 +2563,54 @@ main:focus {
   margin-top: 1.5rem;
   color: var(--on-dark-muted);
 }
+
+/* ==================================================================
+   The 3D world behind the dive (components/immersive/OceanStage.tsx)
+   ================================================================== */
+
+/* Once the world is painted, each zone's own water fades away and the flat
+   illustrations step aside: the world has its own reef, fish, and light. */
+.reef,
+.school,
+.rising,
+.zone__rays {
+  transition: opacity 0.9s ease;
+}
+
+.stage[data-tier="world"][data-painted] + .dive__content .zone::before,
+.stage[data-tier="world"][data-painted] + .dive__content :is(.reef, .school, .rising, .zone__rays) {
+  opacity: 0;
+}
+
+.stage:is([data-tier="world"], [data-tier="still"]) .stage__diver {
+  display: none;
+}
+
+/* Text protection that follows the camera: each shot says how much the text
+   side needs (--scrim). Deep water, not a panel: a soft gradient from the left. */
+.stage[data-tier="world"] .stage__scrim {
+  opacity: 1;
+  background:
+    linear-gradient(to bottom, rgb(4 27 45 / 0.42), rgb(4 27 45 / 0) 9rem),
+    linear-gradient(
+      90deg,
+      rgb(4 27 45 / calc(var(--scrim, 0) * 0.8)) 0%,
+      rgb(4 27 45 / calc(var(--scrim, 0) * 0.62)) 34%,
+      rgb(4 27 45 / calc(var(--scrim, 0) * 0.2)) 52%,
+      rgb(4 27 45 / 0) 66%
+    ),
+    linear-gradient(to top, rgb(4 27 45 / 0.4), rgb(4 27 45 / 0) 40%);
+}
+
+@media (max-width: 899px) {
+  .stage[data-tier="world"] .stage__scrim {
+    background:
+      linear-gradient(to bottom, rgb(4 27 45 / 0.42), rgb(4 27 45 / 0) 9rem),
+      linear-gradient(rgb(4 27 45 / calc(var(--scrim, 0) * 0.66)), rgb(4 27 45 / calc(var(--scrim, 0) * 0.66))),
+      linear-gradient(to top, rgb(4 27 45 / 0.4), rgb(4 27 45 / 0) 40%);
+  }
+}
+
 
 /* ==================================================================
    Motion. Everything here is off under prefers-reduced-motion, and

@@ -34,12 +34,12 @@ export default function Home() {
         <Dive>
           <Hero />
           <FirstDive />
+          <Experiences />
+          <Certification />
+          <UnderwaterVideos />
+          <MeetTabitha />
+          <Groups />
         </Dive>
-        <Experiences />
-        <Certification />
-        <UnderwaterVideos />
-        <MeetTabitha />
-        <Groups />
         <WhereWeMeet />
         <Faq />
         <Book />

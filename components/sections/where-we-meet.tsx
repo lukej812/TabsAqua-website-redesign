@@ -1,5 +1,5 @@
 import { courseDetails, isAsk, meetCopy, meetingPoint } from "@/content/site";
-import { BridgeArt, SurfaceEdge } from "../art/BridgeArt";
+import { BridgeArt } from "../art/BridgeArt";
 import { ExternalIcon, PinIcon } from "../icons";
 import { AskTabitha, CopyButton } from "../ui";
 
@@ -8,7 +8,6 @@ export function WhereWeMeet() {
   const address = `${meetingPoint.name}, ${meetingPoint.street}, ${meetingPoint.locality}`;
   return (
     <section id="where-we-meet" className="zone zone--shore" data-tone="light" data-anim aria-labelledby="meet-title">
-      <SurfaceEdge />
       <div className="wrap zone__inner meet">
         <div className="meet__text">
           <p className="kicker">{meetCopy.kicker}</p>

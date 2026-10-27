@@ -1,4 +1,5 @@
 import { groups, groupsCopy, isAsk } from "@/content/site";
+import { SurfaceEdge } from "../art/BridgeArt";
 import { FishSchool } from "../art/FishSchool";
 import { GroupPlanner } from "../forms/GroupPlanner";
 import { AskTabitha, PhotoFrame } from "../ui";
@@ -37,6 +38,8 @@ export function Groups() {
           <GroupPlanner />
         </div>
       </div>
+      {/* Breaking the surface on the way up, into the shore below. */}
+      <SurfaceEdge />
     </section>
   );
 }

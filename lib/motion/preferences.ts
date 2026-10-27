@@ -4,13 +4,20 @@
  */
 
 /**
- * How the ocean stage behind the hero and descent renders.
+ * How the ocean stage behind the journey renders.
  * - "video": scroll scrubs the footage (only once footage exists).
  * - "frames": scroll scrubs a canvas image sequence (feature flag only).
- * - "scene": the live WebGL water scene, driven by scroll.
- * - "static": no motion. The illustrated surface at the top, plain water below.
+ * - "world": the real-time 3D underwater world, with a camera that travels through it.
+ * - "scene": the lighter 2D water painting, for devices the world is too heavy for.
+ * - "still": one frame of the world, no motion (reduced motion).
+ * - "static": the CSS and SVG drawing (no JavaScript, data saver, no WebGL).
  */
-export type DescentTier = "video" | "frames" | "scene" | "static";
+export type DescentTier = "video" | "frames" | "world" | "scene" | "still" | "static";
+
+export const TIERS: readonly DescentTier[] = ["video", "frames", "world", "scene", "still", "static"];
+
+/** Tiers where scroll drives the stage, so it sticks behind the content. */
+export const LIVE_TIERS: readonly DescentTier[] = ["video", "frames", "world", "scene"];
 
 type NetworkInformationLike = {
   saveData?: boolean;
@@ -63,18 +70,52 @@ export function deviceIsLowEnd(): boolean {
   return (typeof memory === "number" && memory < 2) || (typeof cores === "number" && cores > 0 && cores < 2);
 }
 
+let webgl2: boolean | null = null;
+
+/** Whether this browser can run the 3D world (WebGL 2). Checked once. */
+export function supportsWebGL2(): boolean {
+  if (webgl2 !== null) return webgl2;
+  if (typeof document === "undefined") return false;
+  try {
+    const canvas = document.createElement("canvas");
+    const gl = canvas.getContext("webgl2");
+    webgl2 = Boolean(gl);
+    gl?.getExtension("WEBGL_lose_context")?.loseContext();
+  } catch {
+    webgl2 = false;
+  }
+  return webgl2;
+}
+
 export type TierInputs = {
   hasVideo: boolean;
   hasMobileVideo: boolean;
   useFrames: boolean;
-  /** False once the WebGL scene has failed in this browser. */
+  /** False once the 3D world has failed or proved too slow here. */
+  worldAvailable: boolean;
+  /** False once the 2D water scene has failed here. */
   sceneAvailable: boolean;
 };
 
 /** Picks the richest tier this browser should get. Call only in the browser. */
-export function chooseTier({ hasVideo, hasMobileVideo, useFrames, sceneAvailable }: TierInputs): DescentTier {
-  if (prefersReducedMotion() || connectionIsConstrained() || deviceIsLowEnd()) return "static";
+export function chooseTier({ hasVideo, hasMobileVideo, useFrames, worldAvailable, sceneAvailable }: TierInputs): DescentTier {
+  if (connectionIsConstrained() || deviceIsLowEnd()) return "static";
+  const world = worldAvailable && supportsWebGL2();
+  if (prefersReducedMotion()) return world ? "still" : "static";
   if (useFrames) return "frames";
   if (isSmallScreen() ? hasMobileVideo : hasVideo) return "video";
+  if (world) return "world";
   return sceneAvailable ? "scene" : "static";
+}
+
+export type QualityName = "high" | "medium" | "low";
+
+/** A starting quality for the 3D world. The frame-time governor adjusts from there. */
+export function startingQuality(): QualityName {
+  if (isSmallScreen()) return "low";
+  if (typeof navigator === "undefined") return "medium";
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  const cores = navigator.hardwareConcurrency;
+  if ((typeof memory === "number" && memory <= 4) || (typeof cores === "number" && cores > 0 && cores <= 4)) return "medium";
+  return "high";
 }

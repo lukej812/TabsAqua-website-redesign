@@ -22,10 +22,10 @@ function present(publicPath: string): boolean {
 const END_COLOR = "#0a3656";
 
 /**
- * The surface and the descent: the hero and the first-dive steps, scrolling
- * over one ocean stage. Works out at build time which footage exists, so a
- * visitor never downloads a file that isn't there. Without footage, the live
- * water scene runs. Drop footage into public/ and rebuild to switch it on.
+ * The dive: every section from the surface down to the reef and back up,
+ * scrolling over one ocean stage. Works out at build time which footage
+ * exists, so a visitor never downloads a file that isn't there. Without
+ * footage, the 3D world runs. Drop footage into public/ and rebuild to switch it on.
  */
 export function Dive({ children }: { children: ReactNode }) {
   const { assets } = descent;
@@ -50,9 +50,12 @@ export function Dive({ children }: { children: ReactNode }) {
         endColor={END_COLOR}
         art={<SurfaceArt />}
         diver={<Diver className="diver" />}
-        allowRendererOverride={TEST_ASSETS}
       />
-      <div className="dive__content">{children}</div>
+      <div className="dive__content">
+        {children}
+        {/* The camera path's last shot: the surface, as the dive hands over to the shore. */}
+        <div className="dive__end" aria-hidden="true" />
+      </div>
     </div>
   );
 }
