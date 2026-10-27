@@ -77,7 +77,7 @@ export function buildFloor(noise: Noise, segments: number, uniforms: Record<stri
       ...uniforms,
       uAlbedo: { value: new THREE.Vector3(...srgb("#d9cdb2")) },
       uRock: { value: new THREE.Vector3(...srgb("#8c7b62")) },
-      uGrass: { value: new THREE.Vector3(...srgb("#5d6b3a")) },
+      uGrass: { value: new THREE.Vector3(...srgb("#93a066")) },
     },
     vertexShader: litVertex(),
     fragmentShader: litFragment(
@@ -92,10 +92,13 @@ export function buildFloor(noise: Noise, segments: number, uniforms: Record<stri
       // Rubble and rock showing through where the floor is steep, on the reef ridge.
       float rock = smoothstep(0.12, 0.3, 1.0 - normalize(vNormal).y);
       albedo = mix(albedo, uRock * (0.75 + fine.r * 0.5), rock * 0.8);
-      // Seagrass beds: darker, greener patches.
-      float grass = smoothstep(0.58, 0.68, nz.a) * (1.0 - rock);
-      albedo = mix(albedo, uGrass * (0.7 + fine.a * 0.4), grass);
-      ao = 1.0 - grass * 0.35 - rock * 0.15;
+      // Seagrass beds: greener, speckled patches with ragged edges. Kept close to
+      // the sand's brightness, so they read as growth, not as shadows.
+      float edge = nz.a + (fine.a - 0.5) * 0.16 + (fine.r - 0.5) * 0.08;
+      float grass = smoothstep(0.6, 0.7, edge) * (1.0 - rock);
+      float tuft = smoothstep(0.35, 0.75, fine.g);
+      albedo = mix(albedo, uGrass * (0.8 + tuft * 0.45), grass * 0.62);
+      ao = 1.0 - grass * 0.12 - rock * 0.15;
       `,
       0.3,
       "uniform vec3 uRock; uniform vec3 uGrass;",
@@ -122,7 +125,7 @@ export function buildSeagrass(
   const indices: number[] = [];
   for (let i = 0; i <= segs; i++) {
     const t = i / segs;
-    const w = 0.022 * (1 - t * 0.85);
+    const w = 0.03 * (1 - t * 0.85);
     positions.push(-w, t, 0, w, t, 0);
     normals.push(0, 0, 1, 0, 0, 1);
     uvs.push(0, t, 1, t);
@@ -162,12 +165,13 @@ export function buildSeagrass(
   let tries = 0;
   while (placed < count && tries < count * 30) {
     tries++;
-    const x = WORLD.xMin + 10 + rnd() * (WORLD.xMax - WORLD.xMin - 20);
-    const z = -10 + rnd() * 170;
+    // Only where the camera looks: the reef side of the path, and a little beyond the text side.
+    const x = RIGHT * (-14 + rnd() * 44);
+    const z = -6 + rnd() * 150;
     if (grassMask(x, z) < 0.5 || rnd() > grassMask(x, z)) continue;
     p.set(x, floorHeight(noise, x, z) - 0.05, z);
     q.setFromAxisAngle(up, rnd() * Math.PI * 2);
-    const height = 0.35 + rnd() * 0.55;
+    const height = 0.4 + rnd() * 0.7;
     s.set(1, height, 1);
     m.compose(p, q, s);
     mesh.setMatrixAt(placed++, m);

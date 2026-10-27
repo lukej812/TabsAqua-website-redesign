@@ -28,13 +28,15 @@ type Mound = { x: number; z: number; rx: number; rz: number; h: number; rot: num
 /** Mounds along the right of the path (screen right), a sparser line far left, and an outcrop at the start. */
 function layoutMounds(noise: Noise, rnd: Rnd): Mound[] {
   const raw: { side: number; z: number; size: number }[] = [];
-  for (let z = 24; z < 114; z += 3 + rnd() * 3) {
-    raw.push({ side: 6 + rnd() * 9, z, size: 1 });
-    if (rnd() < 0.7) raw.push({ side: 15 + rnd() * 14, z: z + rnd() * 2, size: 1.2 });
-    if (rnd() < 0.5) raw.push({ side: -14 - rnd() * 14, z: z + rnd() * 3, size: 0.9 });
+  // The main band runs close along the right of the path, so the reef recedes
+  // in perspective toward the middle of the frame as the camera travels.
+  for (let z = 24; z < 114; z += 2 + rnd() * 2.4) {
+    raw.push({ side: 5.5 + rnd() * 8, z, size: 1 });
+    if (rnd() < 0.85) raw.push({ side: 14 + rnd() * 14, z: z + rnd() * 2, size: 1.2 });
+    if (rnd() < 0.4) raw.push({ side: -14 - rnd() * 14, z: z + rnd() * 3, size: 0.9 });
   }
   // Close to the camera's line, so the reef passes near.
-  for (const z of [45, 60, 73, 88, 102]) raw.push({ side: 4.4 + rnd(), z, size: 0.55 });
+  for (const z of [45, 52, 60, 66, 73, 80, 88, 95, 102]) raw.push({ side: 4.2 + rnd() * 1.2, z, size: 0.5 + rnd() * 0.15 });
   // The outcrop in front of the surface view.
   raw.push({ side: 8, z: 16, size: 1.3 }, { side: 11.5, z: 20.5, size: 0.9 }, { side: 5.6, z: 22, size: 0.6 });
   raw.push({ side: -10, z: 18, size: 0.7 }, { side: -16, z: 25, size: 0.9 });

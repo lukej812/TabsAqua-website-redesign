@@ -63,15 +63,22 @@ export function buildSurface(uniforms: Uniforms) {
         vec2 q = vWorld.xz * 0.06;
         vec4 a = texture2D(uNoiseTex, q + vec2(0.011, 0.007) * uTime);
         vec4 b = texture2D(uNoiseTex, q * 2.3 - vec2(0.009, 0.014) * uTime);
-        vec3 N = normalize(vec3((a.r + b.g - 1.0) * 0.55, -1.0, (a.g + b.b - 1.0) * 0.55));
-        float cosI = dot(V, -N);
+        vec2 slope = vec2(a.r + b.g - 1.0, a.g + b.b - 1.0);
+        vec3 N = normalize(vec3(slope * 0.55, -1.0));
+        // The window is a calm disk overhead with a rippled rim. Its edge uses gentler
+        // waves than the glints do, so no bright patches break out far from it.
+        vec3 calm = normalize(vec3(slope * 0.16, -1.0));
+        float cosI = dot(V, -calm);
         // Inside the window the sky shows through; outside, the surface mirrors the deep.
-        float window = smoothstep(0.6, 0.71, cosI);
-        float sun = pow(max(dot(normalize(V + (V - N * cosI) * 0.15), uSunDir), 0.0), 60.0);
+        float window = smoothstep(0.6, 0.76, cosI);
+        float sun = pow(max(dot(normalize(V + (V - N * dot(V, -N)) * 0.15), uSunDir), 0.0), 60.0);
         vec3 sky = uSky + uSunColor * (sun * 2.5 + pow(max(dot(V, uSunDir), 0.0), 8.0) * 0.4);
-        vec3 mirror = mix(uWaterDown, uWaterLevel, 0.55) * 0.8;
-        float shimmer = texture2D(uCausticTex, vWorld.xz * 0.12 + uTime * 0.02).r;
-        vec3 c = mix(mirror + shimmer * 0.05, sky, window);
+        // Outside the window the surface mirrors the water below it: the same hue as
+        // the haze in that direction, a little darker, so no gray bands form.
+        vec3 mirror = mix(waterColor(V), uWaterLevel, 0.22);
+        // Soft mottling where the waves catch the light from below, no hard lines.
+        float shimmer = smoothstep(0.45, 0.8, a.b * 0.6 + b.r * 0.6 - 0.1);
+        vec3 c = mix(mirror * (0.92 + shimmer * 0.2), sky, window);
         float dist = length(vWorld - uCamPos);
         vec3 T = exp(-uExtinction * dist * 0.9);
         gl_FragColor = finish(c * T + waterColor(V) * (1.0 - T), 1.0);
@@ -290,21 +297,29 @@ export function buildSkyPass(uniforms: Uniforms) {
           float horizon = uWaterline + uHorizon;
           vec3 col;
           if (uv.y < horizon) {
-            float k = (uv.y - line) / max(horizon - line, 0.001);
-            col = mix(vec3(0.106, 0.420, 0.580), vec3(0.290, 0.584, 0.725), k);
-            vec2 g = vec2(x, uv.y) * vec2(260.0, 420.0);
-            vec2 gc = floor(g);
-            float sparkle = step(0.9, hash(gc + floor(t * 6.0 + hash(gc) * 6.0)));
-            sparkle *= smoothstep(0.5, 0.1, length(fract(g) - 0.5));
-            float path = exp(-sunDx * 3.6);
-            col += vec3(1.0, 0.97, 0.88) * sparkle * path * 0.85 + vec3(0.9, 0.95, 1.0) * path * 0.12;
+            // The sea, in perspective: waves crowd together toward the horizon,
+            // and the far water turns pale as it reflects more of the sky.
+            float k = clamp((uv.y - line) / max(horizon - line, 0.001), 0.0, 1.0);
+            float persp = 1.0 / max(1.0 - k * 0.97, 0.03);
+            vec2 wp = vec2(x * 7.0 / sqrt(persp), persp * 1.6 - t * 0.12);
+            float waves = noise(wp) * 0.6 + noise(wp * vec2(2.7, 2.1) + 7.0) * 0.4;
+            col = mix(vec3(0.07, 0.36, 0.52), vec3(0.5, 0.7, 0.79), pow(k, 2.0));
+            col *= 0.88 + waves * 0.24 * (1.0 - k * 0.6);
+            col = mix(col, vec3(0.78, 0.86, 0.89), smoothstep(0.8, 1.0, k) * 0.55);
+            // Glitter on the sun's path: short horizontal glints, never in a grid.
+            float path = exp(-sunDx * sunDx * 9.0) * (0.35 + 0.65 * k);
+            vec2 gp = vec2(x * 60.0 / sqrt(persp), persp * 11.0 + t * 0.9);
+            float glint = noise(gp) * noise(gp * vec2(1.7, 2.3) + vec2(3.1, t * 0.7));
+            float sparkle = smoothstep(0.42, 0.6, glint);
+            col += vec3(1.0, 0.97, 0.88) * sparkle * path * 0.9 + vec3(0.92, 0.96, 1.0) * path * 0.1;
           } else {
             float h = clamp((uv.y - horizon) / max(1.0 - horizon, 0.2), 0.0, 1.0);
             col = mix(vec3(0.851, 0.929, 0.949), vec3(0.475, 0.718, 0.839), smoothstep(0.0, 0.3, h));
             col = mix(col, vec3(0.110, 0.353, 0.541), smoothstep(0.25, 1.0, h));
             vec2 sun = vec2(sunX, horizon + (1.0 - (uWaterline + uHorizon)) * 0.42);
             float d = distance(vec2(x, uv.y), sun);
-            col += vec3(1.0, 0.95, 0.84) * (0.4 * exp(-d * 7.5) + 0.85 * smoothstep(0.03, 0.021, d));
+            // A small bright core inside a wide, warm glow, so the sun reads as light, not a disc.
+            col += vec3(1.0, 0.95, 0.84) * (0.28 * exp(-d * 4.0) + 0.45 * exp(-d * 14.0) + 0.6 * smoothstep(0.022, 0.012, d));
             float cloud = noise(vec2(x * 3.0 + t * 0.01, uv.y * 14.0)) * noise(vec2(x * 7.0 - t * 0.015, uv.y * 30.0));
             col = mix(col, vec3(0.95, 0.97, 0.99), smoothstep(0.32, 0.6, cloud) * (1.0 - smoothstep(0.05, 0.3, h)) * 0.6);
           }

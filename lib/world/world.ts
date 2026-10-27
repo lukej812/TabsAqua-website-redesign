@@ -101,7 +101,7 @@ export function createWorld(canvas: HTMLCanvasElement, quality: Quality): World 
   const grassMask = (x: number, z: number) => {
     const rock = Math.min(1, Math.max(0, (floorSlope(noise, x, z) - 0.12) / 0.18));
     const a = noiseAlpha(x, z);
-    return Math.min(1, Math.max(0, (a - 0.58) / 0.1)) * (1 - rock);
+    return Math.min(1, Math.max(0, (a - 0.6) / 0.1)) * (1 - rock);
   };
 
   const scene = new THREE.Scene();

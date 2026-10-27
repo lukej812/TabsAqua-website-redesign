@@ -18,12 +18,12 @@ export type V3 = readonly [number, number, number];
 export type Shot = {
   /** A selector for the element this shot belongs to. */
   anchor: string;
-  /** Where the anchor's top sits when the shot is exact: 0 is the top of the viewport, 1 the bottom. */
+  /** Where the anchor's top sits when the shot is exact: 0 is the top of the viewport, 1 the bottom, -0.5 half a screen above it. */
   at: number;
   cam: V3;
   look: V3;
   /** Phones: a different framing for the same moment. Optional. */
-  phone?: { cam?: V3; look?: V3 };
+  phone?: { cam?: V3; look?: V3; waterline?: number };
   /** What the camera frames. Defaults to the diver. */
   subject?: V3;
   /** Wide screens: where the subject sits across the frame, if not the usual place. */
@@ -65,17 +65,31 @@ export const SHOTS: readonly Shot[] = [
     at: 0,
     cam: [0, -0.22, 0],
     look: [0, -1.72, 10],
-    phone: { cam: [0.6, -0.22, -1], look: [-0.8, -3.6, 10] },
+    phone: { cam: [0.6, -0.22, -1], look: [-0.8, -3.6, 10], waterline: REST_WATERLINE.phone },
     diver: [-3.2, -1.5, 9],
     effort: 0.8,
     scrim: 0,
     waterline: REST_WATERLINE.wide,
     footage: 0,
   },
-  // Slipping under: the surface rises out of frame, the light thins.
+  // Sinking: half a screen down, the camera settles below the surface and the
+  // waterline lifts slowly toward the top of the frame.
+  {
+    anchor: "#top",
+    at: -0.5,
+    cam: [0.3, -0.8, 3.5],
+    look: [-0.5, -2.6, 13.5],
+    phone: { cam: [0.5, -0.8, 1.5], waterline: 0.93 },
+    diver: [-3.1, -2.1, 12],
+    effort: 0.75,
+    scrim: 0.2,
+    waterline: 0.88,
+    footage: 0.15,
+  },
+  // Under: the surface leaves the frame, the light thins, the descent begins.
   {
     anchor: "#first-dive",
-    at: 0.55,
+    at: 0.2,
     cam: [0.6, -1.7, 8],
     look: [-1.0, -4.2, 22],
     diver: [-3.0, -2.9, 15.5],
@@ -136,7 +150,7 @@ export const SHOTS: readonly Shot[] = [
     look: [-2.6, -6.1, 48],
     diver: [-5.0, -5.8, 43],
     effort: 0.5,
-    scrim: 0.35,
+    scrim: 0.55,
     waterline: OUT,
     footage: 1,
   },
@@ -146,9 +160,9 @@ export const SHOTS: readonly Shot[] = [
     at: 0.35,
     cam: [0.9, -5.3, 42],
     look: [-0.9, -6.7, 54],
-    diver: [-3.0, -6.4, 49],
+    diver: [-4.6, -6.2, 49],
     effort: 0.25,
-    scrim: 0.55,
+    scrim: 0.6,
     waterline: OUT,
     footage: 1,
   },
@@ -162,7 +176,7 @@ export const SHOTS: readonly Shot[] = [
     frameX: 0.76,
     diver: [-3.4, -4.6, 62],
     effort: 0.4,
-    scrim: 0.6,
+    scrim: 0.8,
     waterline: OUT,
     footage: 1,
   },
@@ -172,9 +186,9 @@ export const SHOTS: readonly Shot[] = [
     at: 0.35,
     cam: [0.6, -5.2, 66],
     look: [-1.2, -6.0, 80],
-    diver: [-3.6, -5.4, 74],
+    diver: [-5.4, -5.4, 74],
     effort: 0.6,
-    scrim: 0.55,
+    scrim: 0.6,
     waterline: OUT,
     footage: 1,
   },
@@ -188,7 +202,7 @@ export const SHOTS: readonly Shot[] = [
     frameX: 0.8,
     diver: [-3.0, -6.0, 101],
     effort: 0.6,
-    scrim: 0.55,
+    scrim: 0.7,
     waterline: OUT,
     footage: 1,
   },
@@ -201,7 +215,7 @@ export const SHOTS: readonly Shot[] = [
     frameX: 0.8,
     diver: [-6.0, -7.4, 111.4],
     effort: 0.2,
-    scrim: 0.6,
+    scrim: 0.7,
     waterline: OUT,
     footage: 1,
   },
@@ -214,7 +228,7 @@ export const SHOTS: readonly Shot[] = [
     frameX: 0.8,
     diver: [-6.0, -6.6, 111.4],
     effort: 0.2,
-    scrim: 0.6,
+    scrim: 0.7,
     waterline: OUT,
     footage: 1,
   },
@@ -228,7 +242,7 @@ export const SHOTS: readonly Shot[] = [
     frameX: 0.8,
     diver: [-6.0, -4.3, 111.5],
     effort: 0.12,
-    scrim: 0.6,
+    scrim: 0.8,
     waterline: OUT,
     footage: 1,
   },
@@ -241,7 +255,7 @@ export const SHOTS: readonly Shot[] = [
     frameX: 0.8,
     diver: [-6.0, -4.1, 111.5],
     effort: 0.12,
-    scrim: 0.55,
+    scrim: 0.7,
     waterline: OUT,
     footage: 1,
   },
@@ -253,7 +267,7 @@ export const SHOTS: readonly Shot[] = [
     look: [-1.2, -1.4, 131],
     diver: [-4.6, -2.2, 125],
     effort: 0.5,
-    scrim: 0.6,
+    scrim: 0.8,
     waterline: OUT,
     footage: 1,
   },
@@ -263,7 +277,7 @@ export const SHOTS: readonly Shot[] = [
     at: 1,
     cam: [-2.0, -0.22, 126],
     look: [-2.0, -1.72, 136],
-    phone: { look: [-2.6, -3.6, 136] },
+    phone: { look: [-2.6, -3.6, 136], waterline: REST_WATERLINE.phone },
     diver: [-4.6, -0.5, 133],
     effort: 0.4,
     scrim: 0.2,
@@ -359,8 +373,7 @@ export function pathAt(u: number, phone: boolean, shots: readonly Shot[] = SHOTS
   const flat = Math.hypot(dx, dz);
   const heading = flat > 1e-4 ? Math.atan2(dx, dz) : 0;
   const pitch = flat > 1e-4 ? Math.max(-0.6, Math.min(0.6, -Math.atan2(dy, flat))) : 0;
-  const rest = phone ? REST_WATERLINE.phone : REST_WATERLINE.wide;
-  const waterlines = shots.map((s) => (s.waterline < 1 ? rest : s.waterline));
+  const waterlines = shots.map((s) => (phone && s.phone?.waterline) || s.waterline);
   return {
     cam: curve(cams, u),
     look: curve(looks, u),

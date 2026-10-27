@@ -717,6 +717,9 @@ main:focus {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse 95% 72% at 24% 84%, rgb(4 27 45 / 0.6), rgb(4 27 45 / 0) 74%);
+  /* Fades out before the hero's bottom edge, so no line shows as it scrolls away. */
+  -webkit-mask-image: linear-gradient(to top, transparent, #000 3rem);
+  mask-image: linear-gradient(to top, transparent, #000 3rem);
   pointer-events: none;
 }
 
@@ -841,6 +844,8 @@ main:focus {
   }
 
   .hero__facts {
+    position: relative;
+    isolation: isolate;
     grid-area: facts;
     display: grid;
     grid-template-columns: repeat(2, auto);
@@ -849,6 +854,24 @@ main:focus {
     padding: 0 0 0.35rem 2rem;
     border-top: 0;
     border-left: 1px solid rgb(255 255 255 / 0.22);
+  }
+
+  /* The facts sit over the open water on the right: their own soft pool of deep
+     water, fading to nothing at its edges. */
+  .hero__facts::before {
+    content: "";
+    position: absolute;
+    inset: -6rem -7rem -5rem -6rem;
+    z-index: -1;
+    background: radial-gradient(
+      closest-side,
+      rgb(4 27 45 / 0.72),
+      rgb(4 27 45 / 0.66) 45%,
+      rgb(4 27 45 / 0.42) 68%,
+      rgb(4 27 45 / 0.14) 86%,
+      rgb(4 27 45 / 0)
+    );
+    pointer-events: none;
   }
 
 }
@@ -1565,6 +1588,9 @@ main:focus {
 .groups {
   display: grid;
   gap: clamp(3rem, 7vh, 4.5rem);
+}
+
+.groups__text {
   max-width: 44rem;
 }
 
@@ -2586,27 +2612,32 @@ main:focus {
   display: none;
 }
 
-/* Text protection that follows the camera: each shot says how much the text
-   side needs (--scrim). Deep water, not a panel: a soft gradient from the left. */
+/* Text protection that follows the camera. The text column always sits in a
+   veil of deep water; each shot adds more where the view is bright (--scrim),
+   such as looking up at the surface. It fades out before the world's subject,
+   so it reads as shade, not as a panel. Measured from rendered pixels in
+   tests/world.spec.ts. */
 .stage[data-tier="world"] .stage__scrim {
+  --veil: calc(0.3 + var(--scrim, 0) * 0.55);
   opacity: 1;
   background:
-    linear-gradient(to bottom, rgb(4 27 45 / 0.42), rgb(4 27 45 / 0) 9rem),
+    linear-gradient(to bottom, rgb(4 27 45 / 0.55), rgb(4 27 45 / 0.2) 6rem, rgb(4 27 45 / 0) 11rem),
     linear-gradient(
       90deg,
-      rgb(4 27 45 / calc(var(--scrim, 0) * 0.8)) 0%,
-      rgb(4 27 45 / calc(var(--scrim, 0) * 0.62)) 34%,
-      rgb(4 27 45 / calc(var(--scrim, 0) * 0.2)) 52%,
-      rgb(4 27 45 / 0) 66%
+      rgb(4 27 45 / var(--veil)) 0%,
+      rgb(4 27 45 / var(--veil)) 60%,
+      rgb(4 27 45 / calc(var(--veil) * 0.45)) 70%,
+      rgb(4 27 45 / 0) 82%
     ),
     linear-gradient(to top, rgb(4 27 45 / 0.4), rgb(4 27 45 / 0) 40%);
 }
 
+/* Narrow screens: the text spans the width, so the veil does too. */
 @media (max-width: 899px) {
   .stage[data-tier="world"] .stage__scrim {
     background:
-      linear-gradient(to bottom, rgb(4 27 45 / 0.42), rgb(4 27 45 / 0) 9rem),
-      linear-gradient(rgb(4 27 45 / calc(var(--scrim, 0) * 0.66)), rgb(4 27 45 / calc(var(--scrim, 0) * 0.66))),
+      linear-gradient(to bottom, rgb(4 27 45 / 0.55), rgb(4 27 45 / 0.2) 6rem, rgb(4 27 45 / 0) 11rem),
+      linear-gradient(rgb(4 27 45 / var(--veil)), rgb(4 27 45 / var(--veil))),
       linear-gradient(to top, rgb(4 27 45 / 0.4), rgb(4 27 45 / 0) 40%);
   }
 }
