@@ -1,6 +1,6 @@
 import { certificationCopy, courseDetails, courseStages, courses, isAsk, services } from "@/content/site";
 import { DiveFlag } from "../icons";
-import { AskTabitha, BookButton } from "../ui";
+import { AskTabitha, BookButton, listOf } from "../ui";
 
 /**
  * Deeper: the certification courses hang off a descent line, the rope divers
@@ -70,9 +70,7 @@ export function Certification() {
         </div>
 
         {open.length > 0 && (
-          <AskTabitha topic={{ ask: "course details" }}>
-            Not listed here yet: {open.map((a) => a.ask).join(", ")}. Call or email and Tabitha can tell you.
-          </AskTabitha>
+          <AskTabitha topic={{ ask: "course details" }}>Ask Tabitha about {listOf(open.map((a) => a.ask))}.</AskTabitha>
         )}
       </div>
     </section>

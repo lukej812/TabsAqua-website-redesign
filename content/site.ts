@@ -516,7 +516,7 @@ export const groupsCopy = {
   kicker: "Ascent",
   title: "Bring your people",
   intro: "Celebrate in the water. Tabitha hosts groups for:",
-  askText: "Tell Tabitha your date, your headcount, and the occasion.",
+  askText: "Tell her your date, your headcount, and the occasion.",
 } as const;
 
 /**

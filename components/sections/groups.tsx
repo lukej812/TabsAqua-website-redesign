@@ -27,7 +27,11 @@ export function Groups() {
             </a>
           </p>
           <PhotoFrame id="group" className="groups__photo" />
-          {isAsk(groups.sizeLimits) && <AskTabitha topic={groups.sizeLimits}>{groupsCopy.askText}</AskTabitha>}
+          {isAsk(groups.sizeLimits) && (
+            <AskTabitha topic={groups.sizeLimits}>
+              Ask Tabitha about {groups.sizeLimits.ask}. {groupsCopy.askText}
+            </AskTabitha>
+          )}
         </div>
         <div className="js-block groups__planner">
           <GroupPlanner />

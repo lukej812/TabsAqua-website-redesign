@@ -11,7 +11,7 @@ import {
 import { FishSchool } from "../art/FishSchool";
 import { Reef } from "../art/Reef";
 import { CheckIcon, FishIcon, MaskIcon, TankIcon } from "../icons";
-import { AskInline, BookButton, PhotoFrame } from "../ui";
+import { AskTabitha, BookButton, listOf, PhotoFrame } from "../ui";
 
 const ICON = {
   "discover-scuba": <TankIcon size={22} />,
@@ -25,9 +25,19 @@ const PHOTO: Partial<Record<Experience["serviceId"], PhotoId>> = {
   snorkeling: "snorkeling",
 };
 
-function Value({ fact }: { fact: Fact<string> }) {
-  return isAsk(fact) ? <AskInline topic={fact} /> : <>{fact}</>;
-}
+/** How each unconfirmed detail is named in the one "Ask Tabitha" line. */
+const OPEN_LABEL = {
+  steps: "what happens",
+  duration: "how long it runs",
+  minimumAge: "ages",
+  included: "what's included",
+} as const;
+
+const SPECS = [
+  { key: "duration", label: "Time" },
+  { key: "minimumAge", label: "Ages" },
+  { key: "included", label: "Included" },
+] as const;
 
 /** One experience as an editorial spread: the pitch on the left, the dive log on the right. */
 function ExperienceEntry({ experience }: { experience: Experience }) {
@@ -35,6 +45,9 @@ function ExperienceEntry({ experience }: { experience: Experience }) {
   const service = services[serviceId];
   const titleId = `${serviceId}-title`;
   const photo = PHOTO[serviceId];
+  const open = (Object.keys(OPEN_LABEL) as (keyof typeof OPEN_LABEL)[])
+    .filter((key) => isAsk(experience[key]))
+    .map((key) => OPEN_LABEL[key]);
   return (
     <article id={serviceId} className="exp" aria-labelledby={titleId} data-reveal>
       <div className="exp__pitch">
@@ -58,37 +71,26 @@ function ExperienceEntry({ experience }: { experience: Experience }) {
       </div>
       <div className="exp__log">
         {photo && <PhotoFrame id={photo} className="exp__photo" />}
-        <h4 className="exp__label">{experiencesCopy.stepsLabel}</h4>
-        {isAsk(experience.steps) ? (
-          <p>
-            <AskInline topic={experience.steps} />
-          </p>
-        ) : (
-          <ol className="steps">
-            {experience.steps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ol>
+        {!isAsk(experience.steps) && (
+          <>
+            <h4 className="exp__label">{experiencesCopy.stepsLabel}</h4>
+            <ol className="steps">
+              {experience.steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+          </>
         )}
         <dl className="specs">
-          <div>
-            <dt>Time</dt>
-            <dd>
-              <Value fact={experience.duration} />
-            </dd>
-          </div>
-          <div>
-            <dt>Ages</dt>
-            <dd>
-              <Value fact={experience.minimumAge} />
-            </dd>
-          </div>
-          <div>
-            <dt>Included</dt>
-            <dd>
-              <Value fact={experience.included} />
-            </dd>
-          </div>
+          {SPECS.map(({ key, label }) => {
+            const value: Fact<string> = experience[key];
+            return isAsk(value) ? null : (
+              <div key={key}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            );
+          })}
           {experience.requirement && (
             <div>
               <dt>Requires</dt>
@@ -96,6 +98,11 @@ function ExperienceEntry({ experience }: { experience: Experience }) {
             </div>
           )}
         </dl>
+        {open.length > 0 && (
+          <AskTabitha topic={{ ask: `${service.name.toLowerCase()} details` }}>
+            Before you book, ask Tabitha about {listOf(open)}.
+          </AskTabitha>
+        )}
       </div>
     </article>
   );

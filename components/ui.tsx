@@ -46,33 +46,31 @@ export function BookButton({
 /* Ask Tabitha: shown wherever a fact is not confirmed yet             */
 /* ------------------------------------------------------------------ */
 
-/** A full prompt with phone and email, for open questions in a section. */
+/** "a", "a and b", "a, b, and c". */
+export function listOf(items: readonly string[]): string {
+  if (items.length < 3) return items.join(" and ");
+  return `${items.slice(0, -1).join(", ")}, and ${items.at(-1)}`;
+}
+
+/**
+ * One quiet line where a fact isn't confirmed yet: what to ask about, then call
+ * or email. It reads as an invitation, not a hole in the page, so the site can
+ * run for as long as the answer takes. Pass `children` to word it differently.
+ */
 export function AskTabitha({ topic, children }: { topic: Ask; children?: ReactNode }) {
   return (
-    <div className="ask">
-      <p className="ask__title">
-        <ChatIcon size={20} />
-        Ask Tabitha about {topic.ask}
-      </p>
-      <p className="ask__text">{children ?? "Not listed here yet. Call or email and Tabitha can tell you."}</p>
-      <p className="ask__links">
+    <p className="ask">
+      <ChatIcon size={20} />
+      <span className="ask__text">{children ?? <>Ask Tabitha about {topic.ask}.</>}</span>
+      <span className="ask__links">
         <a className="text-link" href={contact.phone.href}>
           Call {contact.phone.display}
         </a>
         <a className="text-link" href={contact.email.href}>
           Email Tabitha
         </a>
-      </p>
-    </div>
-  );
-}
-
-/** A compact "Ask Tabitha" link for a single missing value, such as a spec row. */
-export function AskInline({ topic }: { topic: Ask }) {
-  return (
-    <a className="ask-inline" href="#contact">
-      Ask Tabitha<span className="sr-only"> about {topic.ask}</span>
-    </a>
+      </span>
+    </p>
   );
 }
 

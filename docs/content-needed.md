@@ -4,10 +4,61 @@ Everything here is either unverified or missing. None of it appears on the site 
 fact. Where a gap shows up on the page, the site shows an "Ask Tabitha" prompt with
 her phone and email instead of guessing.
 
-When she answers, update `content/site.ts` (and the "Verified content" section of
-`CLAUDE.md`), then remove the row here.
+The site is complete without any of this. Each gap shows one quiet line ("Ask
+Tabitha about group sizes.") with Call and Email links, so it can stay live for as
+long as the answers take. Nothing here blocks deploying.
 
-## Open questions
+When she answers, update `content/site.ts` (and the "Verified content" section of
+`CLAUDE.md`), then remove the row here. Answers drop in without touching layout:
+replace the `ask("...")` with the real value and the prompt turns into the fact.
+
+## Questions for the next conversation with Tabitha
+
+In order of how much each one helps visitors decide. Write her answers down as she
+says them; the exact wording matters for prices and policies.
+
+**Trust**
+
+- [ ] What are your training and certifications, and which agency do you certify
+      with? (Shows in Meet Tabitha; the agency can then appear on the course cards.)
+- [ ] Can we get a photo of you, face visible, at the water or in gear? (The most
+      important photo on the site.)
+
+**Guided tours for certified divers**
+
+- [ ] What happens on a guided tour, step by step?
+- [ ] How long does it run?
+- [ ] Is there a minimum age?
+- [ ] What's included: tanks, weights, other gear?
+
+**Certification courses (Open Water $600, Advanced $400, Rescue $500)**
+
+- [ ] Where do courses take place: the pool or confined-water part, and the open-water dives?
+- [ ] How are dates set: fixed dates, or scheduled with each student?
+- [ ] What does each price include: online learning, gear, certification card fees?
+
+**Groups and policies**
+
+- [ ] How many people can come at once, for each experience?
+- [ ] What happens if the weather cancels a booking: reschedule, refund, or both?
+- [ ] How do Groupon customers redeem? (The site says "call or email to schedule.")
+
+**Smaller details**
+
+- [ ] Do direct bookings include free underwater videos? (The section is built and hidden.)
+- [ ] Does snorkeling need any swimming ability or experience?
+- [ ] What should people bring and wear?
+- [ ] Does the business have an address to list for search, or none?
+- [ ] Photos of first-timers, snorkelers, and a group, with everyone's permission.
+- [ ] Logo files, if she has them.
+
+**Decisions for you and her together**
+
+- [ ] Which domain should this site use, and where will Wix booking live? (See the
+      booking links section of the README before pointing the www domain here.)
+- [ ] Optional: film descent footage? (The live water scene works without it.)
+
+## Open questions, in detail
 
 | Gap | Where it shows on the site | What it blocks | Where to fill it in `content/site.ts` |
 |---|---|---|---|
@@ -16,7 +67,7 @@ When she answers, update `content/site.ts` (and the "Verified content" section o
 | Course schedules and upcoming dates | Ask Tabitha prompt in "Get certified" | Planning ahead for a course. | `courseDetails.schedule` |
 | What each course price includes (materials, gear, certification fees) | Ask Tabitha prompt in "Get certified" | Comparing $600 / $400 / $500 against other shops. | `courseDetails.inclusions` |
 | Tabitha's training and certifications, and the certifying agency | Ask Tabitha prompt in "Meet Tabitha" (the safety stop). No agency is named anywhere. | Trust signals for nervous beginners. Naming the agency on course cards. | `about.credentials`. Add the agency to course summaries only once confirmed. |
-| Guided tours: what happens, how long, minimum age, what's included (gear?) | Four "Ask Tabitha" links in the guided tours entry on the reef | Certified divers deciding whether to book. | `experiences` entry for `guided-tours`: `steps`, `duration`, `minimumAge`, `included` |
+| Guided tours: what happens, how long, minimum age, what's included (gear?) | One "Ask Tabitha" line in the guided tours entry on the reef. The "How it goes" list and those spec rows are hidden until answered. | Certified divers deciding whether to book. | `experiences` entry for `guided-tours`: `steps`, `duration`, `minimumAge`, `included` |
 | Group size limits | Ask Tabitha prompts in "Bring your people" and the FAQ. The group planner asks for a headcount but sets no maximum. | Planning birthdays, bachelorettes, and reunions. | `groups.sizeLimits`, and the `group-size` FAQ entry |
 | Cancellation and weather refund policy | Ask Tabitha prompt in the FAQ under "What if the weather turns?" | Booking confidence. Experiences are weather dependent. | The `weather` FAQ entry |
 | How Groupon customers redeem | The site only says "Call or email to schedule your experience." | Smoother voucher redemption. | `groupon.text` and the `groupon` FAQ entry |

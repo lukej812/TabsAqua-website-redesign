@@ -1959,8 +1959,12 @@ main:focus {
 }
 
 .faq__answer .ask {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   color: var(--fg);
+}
+
+.faq__answer .ask:first-child {
+  margin-top: 0;
 }
 
 /* ------------------------------------------------------------------ */
@@ -2298,47 +2302,33 @@ main:focus {
    Ask Tabitha
    ================================================================== */
 
+/* One quiet line: the icon, what to ask about, then call or email. */
 .ask {
-  max-width: 34rem;
-  padding: 1.1rem 1.25rem;
-  border: 1.5px dashed var(--rule-strong);
-  border-radius: 1rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.7rem;
+  max-width: 38rem;
   text-align: left;
 }
 
-.ask__title {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-weight: 600;
-}
-
-.ask__title svg {
-  flex: none;
+.ask > svg {
+  margin-top: 0.2rem;
   color: var(--accent);
 }
 
 .ask__text {
-  margin-top: 0.3rem;
-  color: var(--fg-muted);
+  font-weight: 500;
 }
 
 .ask__links {
+  grid-column: 2;
   display: flex;
   flex-wrap: wrap;
   gap: 0 1.5rem;
 }
 
-.ask-inline {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-weight: 600;
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-decoration-thickness: 1.5px;
-  text-decoration-color: var(--accent);
-  text-underline-offset: 0.3em;
+.exp__log .ask {
+  margin-top: 1.5rem;
 }
 
 /* ==================================================================
