@@ -4,7 +4,7 @@ import { ArrowDownIcon, PinIcon } from "../icons";
 /** The surface: the first screen, over the ocean stage. */
 export function Hero() {
   return (
-    <section id="top" className="hero" data-tone="dark" data-zone aria-labelledby="hero-title">
+    <section id="top" className="hero" data-tone="dark" aria-labelledby="hero-title">
       <div className="hero__inner wrap">
         <p className="kicker hero__kicker">
           <PinIcon size={16} />

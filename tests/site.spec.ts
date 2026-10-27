@@ -81,6 +81,15 @@ test("has one h1 and every booking link points at the Wix calendar", async ({ pa
   expect(hrefs.filter((href) => !allowed.has(href))).toEqual([]);
 });
 
+test("serves every reef layer as a prerendered SVG", async ({ request }) => {
+  for (const file of ["far", "mid", "near", "accents"]) {
+    const response = await request.get(`/art/reef-${file}.svg`);
+    expect(response.status(), file).toBe(200);
+    expect(response.headers()["content-type"]).toContain("image/svg+xml");
+    expect(await response.text()).toMatch(/^<svg [^>]*viewBox="0 0 1600 420"/);
+  }
+});
+
 test("every in-page link has a target", async ({ page }) => {
   await page.goto("/");
   const missing = await page.locator('a[href^="#"]').evaluateAll((links) =>

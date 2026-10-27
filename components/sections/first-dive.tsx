@@ -9,7 +9,7 @@ import { BookButton } from "../ui";
 export function FirstDive() {
   const { steps, close } = descent;
   return (
-    <section id="first-dive" className="descent" data-tone="dark" data-zone aria-labelledby="descent-title">
+    <section id="first-dive" className="descent" data-tone="dark" aria-labelledby="descent-title">
       <div className="descent__intro wrap">
         <p className="kicker">{descent.kicker}</p>
         <h2 id="descent-title" className="descent__title" data-reveal>

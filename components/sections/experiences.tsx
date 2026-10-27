@@ -104,7 +104,7 @@ function ExperienceEntry({ experience }: { experience: Experience }) {
 /** The reef: the three experiences, over reef silhouettes and a passing school of fish. */
 export function Experiences() {
   return (
-    <section id="experiences" className="zone zone--reef" data-tone="dark" data-zone aria-labelledby="experiences-title">
+    <section id="experiences" className="zone zone--reef" data-tone="dark" data-anim aria-labelledby="experiences-title">
       <div className="zone__rays" aria-hidden="true" />
       <FishSchool seed={11} count={18} className="school--reef" />
       <div className="wrap zone__inner">
@@ -129,14 +129,7 @@ export function Experiences() {
           ))}
         </div>
       </div>
-      <Reef
-        className="reef--floor"
-        layers={[
-          { seed: 7, base: 150, relief: 50, scale: 0.6, features: 26, color: "var(--reef-far)", depth: 0 },
-          { seed: 21, base: 95, relief: 60, scale: 0.85, features: 22, clear: [0.3, 0.7], color: "var(--reef-mid)", depth: 1 },
-          { seed: 42, base: 45, relief: 40, scale: 1.15, features: 14, clear: [0.25, 0.75], color: "var(--reef-near)", depth: 2 },
-        ]}
-      />
+      <Reef className="reef--floor" />
     </section>
   );
 }

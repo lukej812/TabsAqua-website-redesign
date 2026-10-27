@@ -18,7 +18,7 @@ const ESSENTIAL_ICON: Record<(typeof essentials)[number]["icon"], ReactNode> = {
  */
 export function MeetTabitha() {
   return (
-    <section id="tabitha" className="zone zone--safety" data-tone="dark" data-zone aria-labelledby="tabitha-title">
+    <section id="tabitha" className="zone zone--safety" data-tone="dark" data-anim aria-labelledby="tabitha-title">
       <div className="zone__rays zone__rays--return" aria-hidden="true" />
       <div className="wrap zone__inner">
         <div className="about">

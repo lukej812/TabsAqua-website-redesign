@@ -1,13 +1,15 @@
 # Tabs AquaQuest Diving
 
 Marketing site for Tabs AquaQuest Diving, Tabitha's instructor-led snorkeling and scuba
-business. One long page of rounded panels inside a white frame, styled after the
-[Aquans water-brand shot](https://dribbble.com/shots/21183479-Water-Brand-Ecommerce-Website):
-centered serif headlines, one ocean blue, and white line art. Booking stays on Wix:
-every Book button links out to her existing booking calendar.
+business. The homepage reads as one dive: you start at the surface, sink through the
+water while learning how a first dive goes, explore the reef where the experiences
+are, go deeper for certification, make a safety stop with Tabitha, and come back up to
+the shore to book. Booking stays on Wix: every Book button links out to her existing
+booking calendar.
 
 Built with Next.js (App Router), TypeScript, and Tailwind CSS. Fully static: no API
-routes, no server actions, no environment variables.
+routes, no server actions, no environment variables. The water behind the hero is a
+small hand-written WebGL shader, so it needs no image or video files.
 
 ## Run it
 
@@ -21,7 +23,7 @@ npm run dev
 Open http://localhost:3000.
 
 If a CSS change doesn't show up in dev, stop the server, delete the `.next` folder,
-and start again. (Tests build into `.next-test`, so they no longer clash with dev.)
+and start again. (Tests build into `.next-test`, so they don't clash with dev.)
 
 ## Build
 
@@ -36,27 +38,37 @@ would make the page render per request. Keep it that way.
 ## Test
 
 ```bash
+npm run lint
 npm test
 ```
 
-Runs Playwright against two production builds (`scripts/test-servers.mjs`): port
-3100 as the site ships, and port 3101 with the guided descent media treated as present
-(tests serve synthetic fixtures there). Builds go to `.next-test*`, so a dev server
-keeps working. It covers:
+`npm test` runs Playwright against two production builds (`scripts/test-servers.mjs`):
+port 3100 as the site ships, and port 3101 with the descent footage treated as present
+(tests serve synthetic fixtures there). It covers:
 
-- full-page screenshots at 375, 768, and 1280 px, saved to `test-results/screenshots/`
-- no horizontal scroll at those widths
+- no horizontal scroll at 375, 768, and 1280 px, with full-page screenshots in
+  `test-results/screenshots/`
 - axe accessibility checks (WCAG 2.2 AA plus best practices) with every FAQ open
-- 44px minimum touch targets
+- 44px minimum touch targets, including form fields and the chooser
+- text contrast over the moving water, measured from rendered pixels on desktop and
+  phone, live and static
 - a content guard that fails on night activities, agency names, Jacksonville, review
-  counts, "Test Tour", em dashes, or LocalBusiness data
-- reduced motion, JavaScript disabled, the panel layout, copy buttons, and the mobile menu
-- the guided descent: scrubbing, seek limits, every fallback, memory, layout shift, and
-  screenshots of each chapter at 375, 768, and 1440 px
+  counts, depths in feet or meters, "Test Tour", em dashes, or an address in the
+  structured data
+- every booking link is one of the six real Wix booking pages; every in-page link has
+  a target
+- reduced motion, JavaScript disabled, WebGL unavailable, the booking chooser (with and
+  without script), the group planner's validation and its honest "nothing is sent"
+  message, the header, copy buttons, the phone menu and booking bar, and the 404 page
+- the ocean stage: scroll mapping, the seam into the reef, stopping when off screen,
+  layout shift, and every footage case (scrubbing, failures, phones, memory)
 
-Tests use your installed Google Chrome. To use Playwright's own browser instead, run
-`npx playwright install chromium` and remove the `channel` line in
-`playwright.config.ts`.
+Tests use your installed Google Chrome. To use another Chromium build instead, point
+`PW_CHROMIUM_PATH` at it:
+
+```bash
+PW_CHROMIUM_PATH=/path/to/chromium npm test
+```
 
 ## Deploy to Vercel
 
@@ -75,7 +87,10 @@ prices, and answers from Tabitha can change without touching layout code.
   `business.bookingBase` plus each `bookingPath`.
 - **Experience details:** `experiences` (summary, steps, time, ages, what's included).
 - **Courses:** `courses` and `courseStages`.
-- **Section headings and intros:** the "Page copy" block at the bottom.
+- **The hero and the first-dive steps:** `hero`, `heroFacts`, and `descent`.
+- **The booking chooser:** `bookCopy.paths` (each answer and the services it suggests).
+- **Safety facts:** `essentials`.
+- **Section headings and intros:** the "Page copy" block.
 - **FAQ:** `faq`. Questions appear in the order listed.
 - **Photos:** `photos`. See `docs/asset-manifest.md`.
 
@@ -101,21 +116,28 @@ Track open questions in `docs/content-needed.md`.
 The "Free underwater videos" section is built but hidden. Once Tabitha confirms that
 direct bookings include videos, set `business.videosIncluded` to `true`.
 
-## The guided descent (scroll-scrubbed video)
+## The ocean stage and optional footage
 
-The section under the hero scrubs underwater footage as you scroll. No footage
-exists yet, so it shows an illustrated water column. To add footage:
+Behind the hero and the first-dive steps is the ocean stage. Today it runs the live
+water scene. Real footage can replace it:
 
 ```bash
 npm run video:prepare -- <your-master-clip.mov>
 npm run video:bench -- public/video/guided-descent.mp4 public/video/guided-descent.webm
 ```
 
-Replace `<your-master-clip.mov>` with the path to the real footage (relative paths
-work from whatever folder you run the command in). The first command writes the
-videos and posters into `public/`; the second measures seek times. Rebuild and deploy, and the section switches to the footage on its own.
-Everything about it, from what to film to the QA checklist, is in
+The first command writes the videos and posters into `public/`; the second measures
+seek times. Rebuild and deploy, and the stage switches to the footage on its own.
+What to film, budgets, and the QA checklist are in
 [docs/video-production.md](docs/video-production.md).
+
+## The group planner
+
+"Plan a group outing" (in Bring your people) composes an email to Tabitha in the
+visitor's own mail app, with the occasion, headcount, date, and interests filled in.
+The site has no server, so nothing is sent from it, and the form says so. A form that
+sends directly would need a form service and credentials kept server-side; see
+`docs/content-needed.md`.
 
 ## Booking links and the domain
 
@@ -133,32 +155,38 @@ serves Wix booking.** If this site takes over `www.tabsaquaquestdiving.com`:
 4. Confirm `business.siteUrl` matches the final domain. It drives the canonical URL,
    sitemap, robots.txt, and share tags.
 
+Until then, any address this site doesn't have shows the 404 page, which links back
+to the booking section and Tabitha's phone.
+
 ## How the page is put together
 
 | Path | What it is |
 |---|---|
 | `content/site.ts` | Every business fact and all page copy |
-| `app/page.tsx` | The page, top to bottom, as a stack of panels |
-| `app/globals.css` | Design tokens (palette, type, frame, panels) and all component styles |
+| `app/page.tsx` | The page, top to bottom, as one dive |
+| `app/globals.css` | Design tokens, the tone system, and every section's styles |
 | `components/sections/` | One file per section |
-| `components/ui.tsx` | Book button, Ask Tabitha prompt, contact lines, photo slots |
-| `components/illustrations.tsx` | The hero sea, line-art tank and bridge, dotted waterlines, ring badges, and the scalloped seal |
-| `components/page-script.tsx` | Client: copy buttons, menu closing, pausing offscreen animations |
-| `components/immersive/` | The guided descent (client), with `hooks/`, `lib/motion/`, `lib/video/`, and `styles/guided-descent.css` |
+| `components/immersive/` | The ocean stage (`OceanStage`, client), its server wrapper (`Dive`), and the depth gauge |
+| `components/art/` | The surface, diver, reef, fish, and bridge illustrations |
+| `components/forms/GroupPlanner.tsx` | The group planner (client) |
+| `components/ui.tsx` | Book button, Ask Tabitha prompt, contact lines, photo frames |
+| `components/page-script.tsx` | Client: copy buttons, menu, header state, reveals, booking bar, pausing offscreen animation |
+| `lib/ocean/` | The water shader and its WebGL renderer |
+| `lib/art/` | The seeded reef generator; `app/art/` serves its layers as prerendered SVG |
+| `lib/motion/`, `lib/video/`, `hooks/` | Scroll mapping, motion preferences, and footage scrubbing |
 | `scripts/` | Video preparation, seek benchmark, and the test servers |
-| `app/opengraph-image.tsx`, `app/sitemap.ts`, `app/robots.ts`, `app/icon.svg` | Share image, sitemap, robots, favicon |
-| `docs/` | Open content questions and the photo manifest |
+| `app/opengraph-image.tsx`, `app/sitemap.ts`, `app/robots.ts`, `app/icon.svg`, `app/not-found.tsx` | Share image, sitemap, robots, favicon, 404 |
+| `docs/` | Open content questions, the asset manifest, and the stage and footage notes |
 
-The page works without JavaScript. Every section renders on the server and nothing
-waits on a scroll trigger to be readable. `components/page-script.tsx` wires up the
-copy buttons, closes the mobile menu, and pauses animations that are offscreen. The
-guided descent loads GSAP in idle time and only then switches to its scroll-driven
-layout; without it, its four chapters read as a normal section. Under `prefers-reduced-motion`, the floating
-bubbles, flowing waterlines, and turning badges all stop.
+The page works without JavaScript. Every section renders on the server, the hero's
+water is drawn in CSS until the live scene takes over, and the booking chooser is
+plain radio buttons. Script adds the live water, the diver's descent, reveals, copy
+buttons, and the planner. Under `prefers-reduced-motion`, everything that moves stops
+and the descent reads as a compact list.
 
-Every panel sets `data-tone="light"` or `data-tone="dark"`, which picks the text,
-rule, focus ring, and button colors for that panel. If you change a color in `:root`,
-recheck contrast on the panels that use it.
+Every section sets `data-tone="light"` or `data-tone="dark"`, which picks the text,
+rule, focus ring, and button colors for that section. If you change a color in
+`:root`, rerun `npm test`: the contrast checks will tell you if anything slipped.
 
 ### Out of scope for v1
 

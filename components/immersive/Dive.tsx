@@ -42,7 +42,7 @@ export function Dive({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="dive" id="dive">
+    <div className="dive" id="dive" data-anim>
       <OceanStage
         media={media}
         useFrames={framesFlag && framesAvailable}

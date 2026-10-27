@@ -1,7 +1,5 @@
 type Props = {
   className?: string;
-  /** A scuba diver with a tank, or a snorkeler floating at the surface. */
-  variant?: "diver" | "snorkeler";
 };
 
 const NEAR = "var(--figure, #062039)";
@@ -12,8 +10,7 @@ const FAR = "var(--figure-far, #0a2b47)";
  * reads at any size and can never be mistaken for a photo of a real person.
  * Decorative: the text around it carries the meaning.
  */
-export function Diver({ className, variant = "diver" }: Props) {
-  const scuba = variant === "diver";
+export function Diver({ className }: Props) {
   return (
     <svg
       className={className}
@@ -22,7 +19,7 @@ export function Diver({ className, variant = "diver" }: Props) {
       focusable="false"
       overflow="visible"
     >
-      <g transform={scuba ? "rotate(10 330 110)" : "rotate(-2 330 110)"} strokeLinecap="round" strokeLinejoin="round">
+      <g transform="rotate(10 330 110)" strokeLinecap="round" strokeLinejoin="round">
         {/* The far leg and fin sit behind, a shade lighter. */}
         <g fill={FAR} stroke={FAR}>
           <path d="M144 124 L 48 117 Q 36 118 38 130 L 49 152 Q 56 157 63 152 L 140 141 Z" strokeWidth="2" />
@@ -34,18 +31,14 @@ export function Diver({ className, variant = "diver" }: Props) {
           <ellipse cx="270" cy="113" rx="28" ry="21" />
           <ellipse cx="338" cy="113" rx="70" ry="25" />
           <ellipse cx="356" cy="118" rx="50" ry="23" />
-          {scuba && (
-            <>
-              <rect x="268" y="74" width="122" height="30" rx="15" />
-              <rect x="386" y="79" width="16" height="11" rx="3" />
-              <path d="M400 85 C 428 78, 446 96, 444 124" fill="none" strokeWidth="4" />
-              <circle cx="444" cy="126" r="6" />
-            </>
-          )}
+          {/* Tank, valve, and the regulator hose to the mouth. */}
+          <rect x="268" y="74" width="122" height="30" rx="15" />
+          <rect x="386" y="79" width="16" height="11" rx="3" />
+          <path d="M400 85 C 428 78, 446 96, 444 124" fill="none" strokeWidth="4" />
+          <circle cx="444" cy="126" r="6" />
           <ellipse cx="405" cy="110" rx="17" ry="16" />
           <circle cx="430" cy="112" r="19" />
           <rect x="438" y="103" width="18" height="18" rx="6" />
-          {!scuba && <path d="M424 96 L 420 40 Q 419 30 428 29" fill="none" strokeWidth="6" />}
           <path d="M392 122 L 418 146 L 452 150" fill="none" strokeWidth="13" />
         </g>
         {/* A glint of light on the mask glass. */}

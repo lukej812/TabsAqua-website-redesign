@@ -14,7 +14,6 @@ export function Certification() {
       id="certification"
       className="zone zone--deeper"
       data-tone="dark"
-      data-zone
       aria-labelledby="certification-title"
     >
       <div className="wrap zone__inner">

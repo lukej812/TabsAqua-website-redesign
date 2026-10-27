@@ -198,8 +198,13 @@ export function OceanStage({ media, useFrames, footageNote, endColor, art, diver
       target = -wrapper.getBoundingClientRect().top;
     };
 
+    // Checked every frame, so drawing stops the moment the stage leaves the
+    // screen, without waiting for the observer's next report.
+    const onScreen = () => -target < window.innerHeight + 50 && wrapper.offsetHeight - target > -50;
+
     const tick = (now: number) => {
       frame = 0;
+      if (!onScreen()) return;
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       current = Number.isNaN(current) ? target : follow(current, target, dt);
@@ -249,6 +254,10 @@ export function OceanStage({ media, useFrames, footageNote, endColor, art, diver
       ([entry]) => {
         visible = entry.isIntersecting;
         if (visible) wake();
+        else {
+          cancelAnimationFrame(frame);
+          frame = 0;
+        }
       },
       { rootMargin: "50px 0px" },
     );

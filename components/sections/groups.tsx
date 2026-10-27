@@ -6,7 +6,7 @@ import { AskTabitha, PhotoFrame } from "../ui";
 /** The ascent: groups and celebrations, with a planner that drafts an email to Tabitha. */
 export function Groups() {
   return (
-    <section id="groups" className="zone zone--ascent" data-tone="dark" data-zone aria-labelledby="groups-title">
+    <section id="groups" className="zone zone--ascent" data-tone="dark" data-anim aria-labelledby="groups-title">
       <FishSchool seed={5} count={12} scale={0.8} className="school--ascent" />
       <div className="wrap zone__inner groups">
         <div className="groups__text">

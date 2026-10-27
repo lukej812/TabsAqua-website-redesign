@@ -17,10 +17,15 @@ forms. Do not add Supabase, Stripe, or auth. Structure the code so they can be a
 - Statically rendered. No server actions, no API routes, no environment secrets
 - Fonts through `next/font`
 - Deploy target: Vercel
-- Animation: CSS, plus GSAP + ScrollTrigger for the guided descent only (the owner
-  asked for it in Oct 2026). GSAP is lazy-loaded in idle time and must never enter the
-  initial bundle. Client components: `components/page-script.tsx` and the
-  `components/immersive/` guided descent. Everything else stays a Server Component
+- Animation: CSS, plus one hand-written WebGL fragment shader for the water behind the
+  hero and descent (`lib/ocean/`). No animation libraries: GSAP was removed in Oct 2026
+  when the descent stopped needing it. No Three.js. Scroll stays native: never hijack
+  or smooth-scroll the page
+- Client components: `components/page-script.tsx`, `components/immersive/OceanStage.tsx`
+  and `DepthGauge.tsx`, and `components/forms/GroupPlanner.tsx`. Everything else stays
+  a Server Component
+- Generated art (the reef) is built at build time from a seed, served as prerendered
+  SVG from `app/art/`. Same input, same picture, every build
 
 ## Rule zero: do not invent business facts
 
@@ -91,63 +96,77 @@ confined-water practice, then open-water dives. Do not name an agency.
 
 Never show: the "Test Tour" listing, or anything called "Service 11".
 
-## Design: framed panels (after the "Aquans" reference)
+## Design: a cinematic dive (Oct 2026)
 
-Reference: https://dribbble.com/shots/21183479-Water-Brand-Ecommerce-Website. In Oct 2026
-the owner asked for the site to look like this shot. It replaced the earlier "Guided
-Descent" design (sand-to-navy background and side depth gauge), which is gone.
-
-One long page of rounded panels inside a thin white frame.
+In Oct 2026 the owner asked for a premium, scroll-driven site that feels like
+descending into Florida's underwater world. It replaced the "Aquans" framed-panel
+design (still in git history, commit 64b1e89). One long page, full-bleed sections,
+read as one dive from the surface and back:
 
 ```
-HEADER   Links left, "Tabs AquaQuest" centered in the serif, Contact and Explore dives right
-HERO     Pale sky panel. Huge centered serif H1: "Take your first breath underwater, or
-         your next great dive." Primary button: Explore dives. Text link: New to scuba?
-         Start here. Illustrated sea below (or a real photo once supplied)
-DESCENT  "The guided descent": a 420vh section with a sticky stage. Scroll scrubs the
-         footage surface to reef; four chapters (Surface, First breath, The reef, Your
-         adventure) and a depth gauge follow one progress value. See
-         docs/video-production.md before changing it
-BLUE     Line-art scuba tank (the reference's bottle) with floating fact bubbles, dotted
-         waterlines under each heading, scalloped "See all dives" seal
-WHITE    "Three ways into the water": price row with thin dividers (the awards row)
-         Experiences: ice text panel beside a photo panel, each with a ring badge.
-           Guided tours as one wide blue panel. Price, time, ages, included, Book button
-BLUE     Get certified: Open Water, then Advanced, then Rescue, with the
-           online learning > confined water > open water timeline
-         Free underwater videos (only when videosIncluded is true)
-ICE      Meet Tabitha beside her portrait. Mandi K. testimonial, big centered serif
-PHOTO    Bring your people: heading over the group photo, occasions row below
-SPLIT    Where we meet: line-art bridge (blue) beside the address (ice)
-WHITE    FAQ
-BLUE     Ready when you are: phone, email, "Have a Groupon?" ticket
-FOOTER   Name left, links right
+HEADER   Links left, flag + "Tabs AquaQuest" centered in the serif, Contact and
+         "Book a dive" right. Clear over the sky at the top, solid ink once scrolled
+SURFACE  Hero over the ocean stage: an over-under view (sky and sun above the
+         waterline, sunlit water below), a diver silhouette. Location pill, H1 "Take
+         your first breath underwater, or your next great dive.", lede, Explore dives,
+         New to scuba? Start here, quick facts (prices, time, gear)
+DESCENT  "New to scuba? Here is how your first dive goes." Three real steps (briefing
+         on shore, about three feet of water, a guided dive of roughly 30 minutes),
+         then the 90-minute close and Book Discover Scuba. The stage behind darkens
+         as you scroll. See docs/video-production.md before changing it
+REEF     "Three ways into the water": the three experiences as editorial spreads
+         (pitch, price, Book on the left; steps and specs on the right) over a
+         generated reef floor and a passing school of fish
+DEEPER   Get certified: Open Water, Advanced, Rescue hanging off a descent line from a
+         dive-flag buoy, then online learning > confined water > open water (01 02 03)
+SAFETY   Safety stop: Meet Tabitha, "Good to know before you go" essentials, and the
+STOP     Mandi K. testimonial, big centered serif
+ASCENT   Bring your people: occasions, Discover Scuba note, Ask about group sizes, and
+         the group planner (drafts an email; never claims to send)
+SHORE    The surface seen from below, then Where we meet (address, Maps, copy, bridge
+         line art) and the FAQ on warm sand-white
+SURFACE  Ready when you are: a "Where are you starting from?" chooser (radio buttons
+         and CSS, works without JS), every service and price, phone and email, Groupon
+FOOTER   Ink, wordmark, links
 ```
 
-- Palette: white, pale sky, ice (#e9f1f8), one ocean blue (#1f5b8a), navy text
-  (#173a5c), and a soft mist blue only for the second half of the "Three ways into the
-  water" heading. Diver-down flag red appears only in the buoy and Tabitha's badge.
-  Primary buttons are blue on light panels and white on blue panels. Tokens live on
-  `:root` in `app/globals.css`
-- Type: Newsreader for headlines (weight 400, tight tracking, centered as in the
-  reference), Instrument Sans for everything else. Not Inter or Space Grotesk
-- Signature: white line art on the ocean blue, with dotted waterlines, ring badges, and
-  the scalloped seal
-- Every panel sets `data-tone` (light or dark), which sets text, rules, focus rings, and
-  button colors, so contrast holds on every panel
-- Motion: floating bubbles, flowing waterlines, slowly turning badges, and the guided
-  descent. Paused offscreen, all off under `prefers-reduced-motion`. The descent falls
-  back to an editorial layout (still image, chapters in normal flow) for reduced
-  motion, no JavaScript, GSAP failure, data saver, slow connections, and short windows
-- Sticky header. On mobile, a sticky bottom Book action
+- Palette: deep ocean blues that darken down the page (`--deep` #0a3656 at the reef,
+  `--abyss` #051d33 for courses) and lighten on the ascent; one restrained accent,
+  aqua (#a6e6e3), on dark water only; sand-white `--shore` (#f4f1ea) and pale sky for
+  the shore and booking; navy text (#173a5c) and ocean-blue buttons (#1f5b8a) on
+  light. Diver-down flag red appears only in the flag, the buoy, and the meeting pin.
+  Tokens live on `:root` in `app/globals.css`
+- Type: Newsreader for headlines (weight 400, tight tracking, italic for accents),
+  Instrument Sans for everything else. Not Inter or Space Grotesk
+- Signature: silhouettes against light (the diver, the reef, fish), a short line
+  before each sentence-case section label, and depth as the organizing idea. Section
+  labels name the zone: Surface, Your first dive, The reef, Deeper, Safety stop,
+  Ascent, Back on shore, Back at the surface
+- Every section sets `data-tone` (light or dark), which sets text, rules, focus rings,
+  and button colors. Primary buttons are white on dark water, ocean blue on light
+- The ocean stage: tiers video > frames > scene (live WebGL) > static (CSS/SVG).
+  Footage is optional; without it the live water scene runs. The stage is sticky
+  behind the hero and descent and hands off to the reef color for color
+- Motion: the live water, the diver's descent and bubbles, fish crossing, rising
+  bubbles at the safety stop, the reef drifting in depth (CSS scroll-driven where
+  supported), gentle reveals. Paused offscreen, all off under
+  `prefers-reduced-motion`, where the stage is the still illustration and the steps
+  read as a compact list
+- Depth is atmosphere: the gauge and labels never show feet or meters
+- Sticky header. On phones, a sticky bottom "Book a dive" bar that steps aside while
+  the hero buttons or the booking section are on screen
 - "Have a Groupon?" tells voucher holders to call or email to schedule
-- Photos: none supplied yet. Use illustrations and clearly labeled photo slots listed in
-  `docs/asset-manifest.md`. No AI-generated or stock photos presented as Tabitha, her
-  customers, or her dive sites
+- Photos: none supplied. Sections are designed to stand without them; real photos
+  slot in via `photos` in `content/site.ts` (see `docs/asset-manifest.md`). No
+  "photo coming soon" boxes in production. No AI-generated or stock photos presented
+  as Tabitha, her customers, or her dive sites. Illustrated wildlife stays generic
+  and Florida-appropriate (sea fans, sponges, seagrass, reef fish), never a promise of
+  what you'll see
 
-Avoid: purple gradients, glowing blobs, all-caps labels outside the price row, ring
-badges, and attributions, numbered 01/02/03 markers except on the real course timeline,
-two-tone headings anywhere but "Three ways into the water", "Dive into adventure" filler.
+Avoid: purple gradients, glowing blobs, glassmorphism beyond the header and booking
+bar, all-caps labels, two-tone headings anywhere but "Three ways into the water",
+"Dive into adventure" filler, custom cursors, scroll-jacking, long empty stretches of
+animation, and text over busy imagery without a measured contrast check.
 
 ## Copy voice
 
@@ -157,11 +176,13 @@ trusting. Sentence case, active voice, short sentences, no em dashes.
 ## Quality bar
 
 - Semantic HTML, one h1, skip link, visible focus, 44px touch targets, WCAG 2.2 AA
-  contrast on every panel
+  contrast on every section. Text over the live water is checked from rendered pixels
+  in `tests/descent.spec.ts`, since axe cannot see into a canvas
 - `prefers-reduced-motion`: no floating, flowing, or turning animations. All content
   still visible
-- Every section readable with JavaScript disabled. Nothing waits on a scroll trigger at
-  opacity 0
+- Every section readable with JavaScript disabled. Reveals only hide content that
+  starts below the screen, only when script runs and motion is allowed, and printing
+  shows everything
 - Works at 375, 768, and 1280 px with no horizontal scroll
 - Metadata: real title and description, Open Graph tags, sitemap, robots. No
   LocalBusiness address until the owner confirms one
@@ -170,7 +191,8 @@ trusting. Sentence case, active voice, short sentences, no em dashes.
 
 ## Docs to keep current
 
-- `docs/video-production.md`: guided descent footage brief, encoding, measurements, QA
+- `docs/video-production.md`: the ocean stage, the optional footage brief, encoding,
+  measurements, QA
 - `docs/content-needed.md`: every unresolved fact and what it blocks
 - `docs/asset-manifest.md`: every placeholder image and the real photo it needs
 - `README.md`: run, build, deploy, and how to edit `content/site.ts`

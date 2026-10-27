@@ -12,7 +12,7 @@ const ALL: ServiceId[] = ["snorkeling", "discover-scuba", "guided-tours", "open-
  */
 export function Book() {
   return (
-    <section id="book" className="zone zone--surface" data-tone="light" data-zone aria-labelledby="book-title">
+    <section id="book" className="zone zone--surface" data-tone="light" aria-labelledby="book-title">
       <div className="zone__sun" aria-hidden="true" />
       <div className="wrap zone__inner">
         <header className="zone__head zone__head--center">
