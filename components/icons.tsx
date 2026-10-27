@@ -132,6 +132,76 @@ export function CloseIcon(props: IconProps) {
   );
 }
 
+export function ArrowIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </Icon>
+  );
+}
+
+export function ArrowDownIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 5v14M6 13l6 6 6-6" />
+    </Icon>
+  );
+}
+
+export function PinIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11Z" />
+      <circle cx="12" cy="10" r="2.4" />
+    </Icon>
+  );
+}
+
+/** Calm, shallow water. */
+export function WavesIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3 9c1.5-1.2 3-1.2 4.5 0s3 1.2 4.5 0 3-1.2 4.5 0 3 1.2 4.5 0" />
+      <path d="M3 14c1.5-1.2 3-1.2 4.5 0s3 1.2 4.5 0 3-1.2 4.5 0 3 1.2 4.5 0" />
+      <path d="M3 19c1.5-1.2 3-1.2 4.5 0s3 1.2 4.5 0 3-1.2 4.5 0 3 1.2 4.5 0" />
+    </Icon>
+  );
+}
+
+/** Sun and cloud: weather dependent. */
+export function WeatherIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M8 3v1.5M3.5 8H5M4.8 4.8l1 1M11.2 4.8l-1 1" />
+      <path d="M5.6 10.6A3 3 0 1 1 10.9 8" />
+      <path d="M8 19h9.5a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 8 19Z" />
+    </Icon>
+  );
+}
+
+/** A certification card. */
+export function CardIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="5.5" width="18" height="13" rx="2.5" />
+      <circle cx="8.5" cy="11" r="2" />
+      <path d="M6 15.5c.6-1.2 1.5-1.8 2.5-1.8s1.9.6 2.5 1.8M14 10h4M14 13.5h3" />
+    </Icon>
+  );
+}
+
+/** Two people of different heights: age limits. */
+export function PeopleIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="8" cy="6.5" r="2.5" />
+      <path d="M3.5 20v-4.5A4.5 4.5 0 0 1 8 11a4.5 4.5 0 0 1 4.5 4.5V20" />
+      <circle cx="17" cy="10" r="2" />
+      <path d="M14 20v-3a3 3 0 0 1 6 0v3" />
+    </Icon>
+  );
+}
+
 /**
  * The diver-down flag: red with a white diagonal stripe. Florida boaters know it
  * as "divers below", which is why it marks this site.

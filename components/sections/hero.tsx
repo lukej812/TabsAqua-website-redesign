@@ -1,32 +1,40 @@
-import Image from "next/image";
-import { hero, photos } from "@/content/site";
-import { HeroSea } from "../illustrations";
+import { hero, heroFacts } from "@/content/site";
+import { ArrowDownIcon, PinIcon } from "../icons";
 
+/** The surface: the first screen, over the ocean stage. */
 export function Hero() {
-  const photo: { src?: string; alt: string } = photos.hero;
   return (
-    <section
-      id="top"
-      className={`panel hero${photo.src ? " hero--photo" : ""}`}
-      data-tone="light"
-      aria-labelledby="hero-title"
-    >
-      {photo.src && (
-        <Image src={photo.src} alt={photo.alt} fill priority sizes="100vw" className="hero__photo" />
-      )}
-      <div className="hero__content">
-        <h1 id="hero-title">{hero.title}</h1>
+    <section id="top" className="hero" data-tone="dark" data-zone aria-labelledby="hero-title">
+      <div className="hero__inner wrap">
+        <p className="kicker hero__kicker">
+          <PinIcon size={16} />
+          {hero.kicker}
+        </p>
+        <h1 id="hero-title" className="hero__title">
+          {hero.title} <em>{hero.titleTail}</em>
+        </h1>
         <p className="hero__lede">{hero.lede}</p>
         <div className="hero__actions">
           <a className="btn btn--primary" href="#experiences">
             {hero.primaryCta}
           </a>
-          <a className="text-link" href="#start-here">
+          <a className="btn btn--ghost" href="#first-dive">
             {hero.secondaryCta}
           </a>
         </div>
+        <dl className="hero__facts">
+          {heroFacts.map((fact) => (
+            <div key={fact.label}>
+              <dt>{fact.label}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
-      {!photo.src && <HeroSea />}
+      <a className="hero__cue" href="#first-dive">
+        <span>{hero.scrollCue}</span>
+        <ArrowDownIcon size={18} />
+      </a>
     </section>
   );
 }

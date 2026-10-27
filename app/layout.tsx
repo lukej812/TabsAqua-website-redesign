@@ -12,7 +12,7 @@ const display = Newsreader({
   display: "swap",
 });
 
-// A clean grotesk for everything else, quiet like the reference's small text.
+// A clean grotesk for everything else.
 const body = Instrument_Sans({
   subsets: ["latin"],
   variable: "--font-body",
@@ -43,12 +43,21 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#0a3656",
 };
+
+/**
+ * Marks the page as scripted before the first paint, so script-only controls
+ * (copy buttons, the group planner) and the clear header never flash in late.
+ */
+const MARK_SCRIPTED = `document.documentElement.classList.add("js")`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: MARK_SCRIPTED }} />
+      </head>
       <body>{children}</body>
     </html>
   );

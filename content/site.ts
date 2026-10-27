@@ -393,97 +393,149 @@ export const faq: FaqEntry[] = [
 /* ------------------------------------------------------------------ */
 /* Page copy                                                           */
 /* Headings and intros for each section. Facts above, words here.      */
+/* The page reads as one dive: surface, descent, reef, deeper, safety  */
+/* stop, ascent, back on shore, and booking at the surface.            */
 /* ------------------------------------------------------------------ */
 
 export const hero = {
-  title: "Take your first breath underwater, or your next great dive.",
-  lede: "Snorkeling, Discover Scuba, guided tours, and certification courses with Tabitha. Snorkel and scuba experiences meet at Phil Foster Park at Blue Heron Bridge, Riviera Beach, FL.",
+  kicker: "Snorkel and scuba with Tabitha in Riviera Beach, Florida",
+  title: "Take your first breath underwater,",
+  titleTail: "or your next great dive.",
+  lede: "Snorkeling, Discover Scuba, guided tours for certified divers, and certification courses. No experience needed for Discover Scuba.",
   primaryCta: "Explore dives",
   secondaryCta: "New to scuba? Start here",
+  scrollCue: "Scroll to descend",
+} as const;
+
+/** The quick facts along the bottom of the hero. Prices come from `serviceList`. */
+export const heroFacts = [
+  { label: "Snorkeling", value: `From ${services.snorkeling.price}` },
+  { label: "Discover Scuba", value: services["discover-scuba"].price },
+  { label: "Time", value: "About 90 minutes" },
+  { label: "Gear", value: "Equipment provided" },
+] as const;
+
+/**
+ * The descent: how a first scuba experience goes, one step per screen, as the
+ * water darkens behind it. Every line here comes from her own listings.
+ */
+export const descent = {
+  kicker: "Your first dive",
+  title: "New to scuba? Here is how your first dive goes.",
+  steps: [
+    {
+      id: "briefing",
+      label: "On shore",
+      title: "It starts with a briefing on shore.",
+      text: "Snorkel and scuba experiences start on shore, so you know what comes next before you get wet. Nervous is normal. That is what the briefing is for.",
+    },
+    {
+      id: "practice",
+      label: "In the shallows",
+      title: "Then you practice in about three feet of water.",
+      text: "Your first breaths underwater happen in the shallows, before the dive itself. Take them one at a time.",
+    },
+    {
+      id: "dive",
+      label: "The dive",
+      title: "Then a guided dive of roughly 30 minutes.",
+      text: "When the practice feels easy, you head out with your guide. Marine life and conditions vary from dive to dive.",
+    },
+  ],
+  close: {
+    title: "About 90 minutes, start to finish.",
+    text: "Briefing included and equipment provided. Scuba starts at age 10. Snorkeling starts at 8 and follows the same rhythm: a safety briefing on shore, shallow-water practice, then a guided tour.",
+    secondary: { label: "Compare all experiences", href: "#experiences" },
+  },
+  /** Shown whenever real footage plays, so nothing reads as a promise. */
+  footageNote: "Marine life and conditions vary from dive to dive.",
+  /**
+   * Optional footage, relative to public/. The site checks at build time which
+   * exist. Without footage the live water scene runs instead. See docs/video-production.md.
+   */
+  assets: {
+    webm: "/video/guided-descent.webm",
+    mp4: "/video/guided-descent.mp4",
+    /** Optional lighter cut for phones. Without it, phones get the live water scene. */
+    mobileMp4: "/video/guided-descent-mobile.mp4",
+    poster: "/images/guided-descent-poster.webp",
+    mobilePoster: "/images/guided-descent-mobile.webp",
+    /** Only used when NEXT_PUBLIC_USE_FRAME_SEQUENCE=true. */
+    framesManifest: "/video/frames/manifest.json",
+  },
 } as const;
 
 /**
- * The blue line-art panel. The bubbles in the tank illustration repeat facts
- * from the text beside them, so keep the two in step.
+ * The page's depth zones, top to bottom, for the depth gauge. The names are
+ * atmosphere, not real depths: no feet or meters anywhere.
  */
-export const firstDive = {
-  title: "Your first breath, made simple",
-  text: "Snorkel and scuba experiences start with a briefing on shore. Then you practice in shallow water before heading out with a guide.",
-  sideTitle: "Gear and briefing included",
-  sideText: "Plan on about 90 minutes from briefing to finish. Snorkeling starts at age 8 and scuba at 10. On Discover Scuba you practice in about three feet of water, then take a guided dive of roughly 30 minutes.",
-  bubbles: ["8+", "10+", "3 ft", "30 min"],
-  tankLabel: "90 min",
-  badge: "See all dives",
-} as const;
-
-export type StartPath = {
-  label: string;
-  /** The price shown is this service's price, with "From" in front when `from` is true. */
-  price: { from: boolean; serviceId: ServiceId };
-  detail: string;
-  href: string;
-  link: string;
-};
-
-/** The price row under the blue panel. Prices come from `serviceList`. */
-export const startHere: {
-  title: string;
-  titleSoft: string;
-  intro: string;
-  paths: StartPath[];
-} = {
-  title: "Three ways",
-  titleSoft: "into the water",
-  intro: "Pick the one that sounds like you.",
-  paths: [
-    {
-      label: "Never dived",
-      price: { from: true, serviceId: "snorkeling" },
-      detail: "Snorkeling or Discover Scuba",
-      href: "#discover-scuba",
-      link: "See beginner options",
-    },
-    {
-      label: "Want to get certified",
-      price: { from: false, serviceId: "open-water" },
-      detail: "Open Water Diver",
-      href: "#certification",
-      link: "See courses",
-    },
-    {
-      label: "Already certified",
-      price: { from: false, serviceId: "guided-tours" },
-      detail: "Professional guided tours",
-      href: "#guided-tours",
-      link: "See guided tours",
-    },
-  ],
-};
+export const zones = [
+  { id: "top", label: "Surface" },
+  { id: "first-dive", label: "Descent" },
+  { id: "experiences", label: "The reef" },
+  { id: "certification", label: "Deeper" },
+  { id: "tabitha", label: "Safety stop" },
+  { id: "groups", label: "Ascent" },
+  { id: "where-we-meet", label: "Shore" },
+  { id: "book", label: "Surface" },
+] as const;
 
 export const experiencesCopy = {
-  title: "Experiences",
+  kicker: "The reef",
+  title: "Three ways",
+  titleSoft: "into the water",
   intro: "Snorkel and scuba experiences meet at Phil Foster Park at Blue Heron Bridge. Good to know before you book:",
   stepsLabel: "How it goes",
 } as const;
 
 export const certificationCopy = {
+  kicker: "Deeper",
   title: "Get certified",
   intro: "Certification goes step by step. Start with Open Water Diver, then build on it with Advanced and Rescue.",
+  startHere: "Start here",
   stagesTitle: "How courses run",
 } as const;
 
 export const aboutCopy = {
+  kicker: "Safety stop",
   title: "Meet Tabitha",
-  badge: "Instructor-led snorkel and scuba",
+  essentialsTitle: "Good to know before you go",
 } as const;
 
+/** Practical facts, all from her own listings. Shown as a list beside "Meet Tabitha". */
+export const essentials = [
+  { icon: "briefing", text: "Every snorkel and scuba experience starts with a briefing on shore." },
+  { icon: "shallow", text: "You practice in shallow water before heading out with a guide." },
+  { icon: "gear", text: "Equipment is provided for snorkel and scuba experiences." },
+  { icon: "age", text: "Snorkeling starts at age 8. Scuba starts at age 10." },
+  { icon: "cert", text: "Guided tours are for divers with a diving certification." },
+  { icon: "weather", text: "Experiences are weather dependent. Reservation and waiver required." },
+] as const;
+
 export const groupsCopy = {
+  kicker: "Ascent",
   title: "Bring your people",
   intro: "Celebrate in the water. Tabitha hosts groups for:",
   askText: "Tell Tabitha your date, your headcount, and the occasion.",
 } as const;
 
+/**
+ * The group planner composes an email in the visitor's own mail app. Nothing
+ * is sent from this site, so it never claims a message went through.
+ */
+export const planner = {
+  title: "Plan a group outing",
+  intro: "Fill this in and your email app opens with a message to Tabitha, ready to send.",
+  occasions: [...groups.occasions, "Something else"],
+  interests: ["Snorkeling", "Discover Scuba", "Guided tours for certified divers", "Not sure yet"],
+  submit: "Write the email",
+  opened: "Your email app should open with the message. Nothing is sent until you press send there.",
+  noApp: "No email app on this device? Copy the message and send it from anywhere, or call.",
+  subject: "Group outing",
+} as const;
+
 export const meetCopy = {
+  kicker: "Back on shore",
   title: "Where we meet",
   intro: "Snorkel and scuba experiences meet here:",
   note: "It's a public park and our meeting point.",
@@ -495,92 +547,79 @@ export const faqCopy = {
   intro: "Short answers to what people ask most. Anything else, just ask.",
 } as const;
 
-export const finalCopy = {
-  title: "Ready when you are",
-  lede: "Pick an experience and book online, or reach out first. Nervous questions are welcome.",
-  cta: "Choose an experience",
-} as const;
-
-/* ------------------------------------------------------------------ */
-/* The guided descent                                                  */
-/* A scroll-scrubbed video sequence under the hero. Copy here; the     */
-/* footage itself is decorative and carries no text.                   */
-/* ------------------------------------------------------------------ */
-
-export type DescentChapter = {
+export type ChooserPath = {
   id: string;
-  /** Short name, shown on the depth gauge and read as "Chapter 2 of 4: First breath". */
+  /** The answer the visitor picks. */
   label: string;
+  /** What the site suggests for that answer. */
   title: string;
   text: string;
-  /** Scroll progress where the chapter starts and ends, 0 to 1. */
-  range: readonly [number, number];
+  services: ServiceId[];
+  /** For answers that point at a section rather than a booking page. */
+  link?: { label: string; href: string };
 };
 
-export const guidedDescent = {
-  /** Read by screen readers as the section heading. */
-  title: "The guided descent: from the surface to the reef",
-  chapters: [
+export const bookCopy = {
+  kicker: "Back at the surface",
+  title: "Ready when you are",
+  lede: "Pick an experience and book online, or reach out first. Nervous questions are welcome.",
+  chooserTitle: "Where are you starting from?",
+  listTitle: "Every experience and course",
+  contactTitle: "Talk to Tabitha first",
+  paths: [
     {
-      id: "surface",
-      label: "Surface",
-      title: "Your next adventure starts at the surface.",
-      text: "Take a breath, meet your instructor, and discover how simple your first underwater experience can feel.",
-      range: [0, 0.22],
+      id: "new",
+      label: "I've never dived",
+      title: "Start with Discover Scuba or snorkeling",
+      text: "No experience needed for Discover Scuba. Scuba starts at age 10 and snorkeling at 8.",
+      services: ["discover-scuba", "snorkeling"],
     },
     {
-      id: "first-breath",
-      label: "First breath",
-      title: "Take your first breath underwater.",
-      // "Small groups" was in the brief but group size is unconfirmed, so it is left out.
-      text: "Beginner-friendly instruction and patient guidance help you feel comfortable from the very beginning. Snorkel and scuba experiences start with a briefing on shore.",
-      range: [0.22, 0.48],
+      id: "certify",
+      label: "I want to get certified",
+      title: "Start with Open Water Diver",
+      text: "Your first scuba certification: online learning, then confined-water practice, then open-water dives.",
+      services: ["open-water"],
+      link: { label: "See how courses run", href: "#certification" },
     },
     {
-      id: "reef",
-      label: "The reef",
-      title: "Enter a world most people never get to see.",
-      text: "Explore local marine life through guided dives, snorkeling adventures, and certification courses.",
-      range: [0.48, 0.75],
+      id: "certified",
+      label: "I'm already certified",
+      title: "Come out on a guided tour, or keep training",
+      text: "Guided tours need a diving certification. Advanced follows Open Water, and Rescue follows Advanced.",
+      services: ["guided-tours", "advanced", "rescue"],
     },
     {
-      id: "adventure",
-      label: "Your adventure",
-      title: "Ready to go deeper?",
-      text: "Find the experience that fits you, from your first scuba session to your next guided dive.",
-      range: [0.75, 1],
+      id: "group",
+      label: "I'm bringing a group",
+      title: "Plan it with Tabitha",
+      text: "Birthdays, bachelorette trips, family reunions, and friend groups. Some options need no experience at all.",
+      services: ["discover-scuba", "snorkeling"],
+      link: { label: "Plan a group outing", href: "#groups" },
     },
-  ] satisfies DescentChapter[],
-  cta: { label: "Explore dives", href: "#experiences" },
-  secondary: { label: "New to scuba? Start here", href: "#start-here" },
-  /** Shown whenever real footage plays, so nothing reads as a promise. */
-  footageNote: "Marine life and conditions vary from dive to dive.",
-  /**
-   * Media files, relative to public/. The site checks at build time which exist.
-   * Missing files fall back to a still image or an illustration. See docs/video-production.md.
-   */
-  assets: {
-    webm: "/video/guided-descent.webm",
-    mp4: "/video/guided-descent.mp4",
-    /** Optional lighter cut for phones. Without it, phones get the still version. */
-    mobileMp4: "/video/guided-descent-mobile.mp4",
-    poster: "/images/guided-descent-poster.webp",
-    mobilePoster: "/images/guided-descent-mobile.webp",
-    /** Only used when NEXT_PUBLIC_USE_FRAME_SEQUENCE=true. */
-    framesManifest: "/video/frames/manifest.json",
-  },
+  ] satisfies ChooserPath[],
 } as const;
+
+/** Who each service is for, in a few words, for the full price list. */
+export const serviceFor: Record<ServiceId, string> = {
+  "discover-scuba": "No experience needed. Ages 10 and up",
+  snorkeling: "Ages 8 and up",
+  "guided-tours": "Certified divers",
+  "open-water": "Your first certification",
+  advanced: "After Open Water",
+  rescue: "After Advanced",
+};
 
 /* ------------------------------------------------------------------ */
 /* Photos                                                              */
-/* None supplied yet. Each slot shows a labeled placeholder until it   */
-/* gets a `src`. Put the file in public/photos/ and set src here, for  */
-/* example src: "/photos/tabitha-portrait.jpg". See                    */
-/* docs/asset-manifest.md for sizes and what each photo should show.   */
+/* None supplied yet. Until a slot gets a `src`, its section shows     */
+/* illustration instead (never a stock or AI photo). Put the file in   */
+/* public/photos/ and set src here, for example                        */
+/* src: "/photos/tabitha-portrait.jpg". See docs/asset-manifest.md.    */
 /* ------------------------------------------------------------------ */
 
 export type Photo = {
-  /** Shown on the placeholder until a real photo arrives. */
+  /** What the photo should show. Development builds label the empty slot with it. */
   caption: string;
   /** Alt text for the real photo. Describe what is actually in it. */
   alt: string;
@@ -588,11 +627,6 @@ export type Photo = {
 };
 
 export const photos = {
-  /** Optional. Until it has a src, the hero shows an illustrated sea instead. */
-  hero: {
-    caption: "Calm water at the meeting point.",
-    alt: "",
-  },
   "discover-scuba": {
     caption: "A first-time diver practicing in shallow water.",
     alt: "A first-time diver practicing in shallow water with Tabitha.",

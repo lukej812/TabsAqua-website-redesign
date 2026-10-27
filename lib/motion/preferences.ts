@@ -4,13 +4,13 @@
  */
 
 /**
- * How the guided descent renders.
- * - "video": scroll scrubs the footage.
+ * How the ocean stage behind the hero and descent renders.
+ * - "video": scroll scrubs the footage (only once footage exists).
  * - "frames": scroll scrubs a canvas image sequence (feature flag only).
- * - "still": scroll drives the chapters and overlay over a still image.
- * - "editorial": no motion. A still image and the four chapters in normal flow.
+ * - "scene": the live WebGL water scene, driven by scroll.
+ * - "static": no motion. The illustrated surface at the top, plain water below.
  */
-export type DescentTier = "video" | "frames" | "still" | "editorial";
+export type DescentTier = "video" | "frames" | "scene" | "static";
 
 type NetworkInformationLike = {
   saveData?: boolean;
@@ -18,7 +18,7 @@ type NetworkInformationLike = {
 };
 
 const SMALL_SCREEN = "(max-width: 767px)";
-const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
+export const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
 function media(query: string): boolean {
   return typeof window !== "undefined" && typeof window.matchMedia === "function"
@@ -45,6 +45,7 @@ export function subscribeToMedia(query: string) {
 }
 
 export const subscribeToSmallScreen = subscribeToMedia(SMALL_SCREEN);
+export const subscribeToReducedMotion = subscribeToMedia(REDUCED_MOTION);
 
 /** Data saver on, or a 2G-class connection. */
 export function connectionIsConstrained(): boolean {
@@ -62,31 +63,18 @@ export function deviceIsLowEnd(): boolean {
   return (typeof memory === "number" && memory < 2) || (typeof cores === "number" && cores > 0 && cores < 2);
 }
 
-/**
- * When the pinned, scrubbed layout is allowed. CSS uses the same query in
- * styles/guided-descent.css, so layout and script always agree. Short windows
- * (landscape phones, 200% zoom) get the editorial layout so text can reflow.
- */
-export const IMMERSIVE_LAYOUT_QUERY =
-  "(scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-height: 34rem)";
-
-export function immersiveLayoutAllowed(): boolean {
-  return media(IMMERSIVE_LAYOUT_QUERY);
-}
-
-export const subscribeToImmersiveLayout = subscribeToMedia(IMMERSIVE_LAYOUT_QUERY);
-
 export type TierInputs = {
   hasVideo: boolean;
   hasMobileVideo: boolean;
   useFrames: boolean;
+  /** False once the WebGL scene has failed in this browser. */
+  sceneAvailable: boolean;
 };
 
 /** Picks the richest tier this browser should get. Call only in the browser. */
-export function chooseTier({ hasVideo, hasMobileVideo, useFrames }: TierInputs): DescentTier {
-  if (prefersReducedMotion() || connectionIsConstrained() || deviceIsLowEnd()) return "editorial";
+export function chooseTier({ hasVideo, hasMobileVideo, useFrames, sceneAvailable }: TierInputs): DescentTier {
+  if (prefersReducedMotion() || connectionIsConstrained() || deviceIsLowEnd()) return "static";
   if (useFrames) return "frames";
-  const small = isSmallScreen();
-  if (small ? hasMobileVideo : hasVideo) return "video";
-  return "still";
+  if (isSmallScreen() ? hasMobileVideo : hasVideo) return "video";
+  return sceneAvailable ? "scene" : "static";
 }

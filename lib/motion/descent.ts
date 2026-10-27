@@ -1,66 +1,45 @@
 /**
- * Pure mapping from one normalized scroll progress value (0 to 1) to everything
- * the guided descent shows: video time, chapter visibility, and depth tint.
- * One progress value drives all of it, so nothing can drift out of sync.
+ * Pure mapping from scroll position to everything the ocean stage shows:
+ * footage time, frame index, how far the camera has sunk, and the hand-off
+ * to the next section. One scroll value drives all of it, so nothing can
+ * drift out of sync.
  */
-
-export type ChapterRange = readonly [start: number, end: number];
-
-/** How much progress a chapter spends fading in or out at each edge. */
-export const CHAPTER_FADE = 0.045;
-
-/** How far a chapter travels while it fades, as a fraction of its own height. */
-export const CHAPTER_TRAVEL = 0.12;
 
 export function clamp01(value: number): number {
   return value < 0 ? 0 : value > 1 ? 1 : value;
 }
 
-/** A gentle ease-out. Text settles; it never bounces. */
-function easeOut(t: number): number {
-  return 1 - (1 - t) ** 3;
+export function smoothstep(edge0: number, edge1: number, value: number): number {
+  const t = clamp01((value - edge0) / (edge1 - edge0));
+  return t * t * (3 - 2 * t);
 }
 
-/** Index of the chapter that owns this progress value. */
-export function chapterIndexAt(progress: number, ranges: readonly ChapterRange[]): number {
-  const p = clamp01(progress);
-  for (let i = ranges.length - 1; i >= 0; i--) {
-    if (p >= ranges[i][0]) return i;
-  }
-  return 0;
-}
-
-export type ChapterState = {
-  /** 0 to 1 */
-  opacity: number;
-  /** -1 to 1, multiplied by CHAPTER_TRAVEL for the vertical offset. Positive is below rest. */
-  offset: number;
+export type StageMetrics = {
+  /** Pixels scrolled past the top of the dive wrapper. Can be negative or past the end. */
+  scrolled: number;
+  /** Wrapper height, in pixels. */
+  height: number;
+  /** Stage (viewport) height, in pixels. */
+  viewport: number;
 };
 
-/**
- * Visibility of chapter `index` at `progress`.
- * Each chapter fades in at the start of its range and out at the end, so one
- * chapter is fully gone before the next is fully in. The first chapter is
- * already visible at 0 and the last one stays visible at 1.
- */
-export function chapterState(progress: number, index: number, ranges: readonly ChapterRange[]): ChapterState {
-  const p = clamp01(progress);
-  const [start, end] = ranges[index];
-  const first = index === 0;
-  const last = index === ranges.length - 1;
+export type StageState = {
+  /** 0 at the top of the wrapper, 1 when the stage is about to scroll away. */
+  progress: number;
+  /** How far the camera has sunk, in screen heights. Never negative. */
+  depth: number;
+  /** 0 to 1 over the last screen of pinned travel: blend into the next section's color. */
+  end: number;
+};
 
-  if (p < start || p > end) {
-    return { opacity: 0, offset: p < start ? 1 : -1 };
-  }
-  if (!first && p < start + CHAPTER_FADE) {
-    const t = easeOut((p - start) / CHAPTER_FADE);
-    return { opacity: t, offset: 1 - t };
-  }
-  if (!last && p > end - CHAPTER_FADE) {
-    const t = easeOut((end - p) / CHAPTER_FADE);
-    return { opacity: t, offset: -(1 - t) };
-  }
-  return { opacity: 1, offset: 0 };
+export function stageState({ scrolled, height, viewport }: StageMetrics): StageState {
+  const travel = Math.max(1, height - viewport);
+  const clamped = Math.min(Math.max(scrolled, 0), travel);
+  return {
+    progress: clamped / travel,
+    depth: clamped / Math.max(1, viewport),
+    end: smoothstep(travel - viewport, travel, clamped),
+  };
 }
 
 /**
@@ -79,8 +58,47 @@ export function frameIndexAt(progress: number, frameCount: number): number {
   return Math.round(clamp01(progress) * (frameCount - 1));
 }
 
-/** Progress at the middle of a chapter, used to bring a focused chapter into view. */
-export function chapterMidpoint(index: number, ranges: readonly ChapterRange[]): number {
-  const [start, end] = ranges[index];
-  return (start + end) / 2;
+/**
+ * Moves `current` toward `target` like a weighted camera: fast at first, then
+ * settling. `lag` is roughly how long it takes to catch up, in seconds.
+ */
+export function follow(current: number, target: number, dt: number, lag = 0.14): number {
+  if (lag <= 0) return target;
+  const next = current + (target - current) * (1 - Math.exp(-dt / lag));
+  return Math.abs(target - next) < 1e-4 ? target : next;
+}
+
+export type DiverPose = {
+  /** Offset from the diver's resting place, as fractions of the screen. */
+  x: number;
+  y: number;
+  rotate: number;
+  scale: number;
+  opacity: number;
+};
+
+/**
+ * Where the diver is for a given depth. On wide screens the diver sinks
+ * slowly beside the text and leaves the frame at the end of the descent. On
+ * phones the text is full width, so the diver fades away as the hero leaves.
+ */
+export function diverPose(state: StageState, small: boolean): DiverPose {
+  const d = Math.min(state.depth, 3);
+  if (small) {
+    return {
+      x: d * 0.04,
+      y: d * 0.1,
+      rotate: 4 + d * 4,
+      scale: 1 - d * 0.1,
+      opacity: 1 - smoothstep(0.12, 0.45, state.depth),
+    };
+  }
+  const exit = smoothstep(0.82, 1, state.progress);
+  return {
+    x: d * 0.025,
+    y: d * 0.045 + exit * exit * 0.7,
+    rotate: 2 + d * 3 + exit * 8,
+    scale: 1 - d * 0.07,
+    opacity: 1,
+  };
 }
