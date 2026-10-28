@@ -19,7 +19,7 @@ import {
 } from "@/lib/motion/preferences";
 import { createOceanRenderer, hexToRgb, type OceanRenderer } from "@/lib/ocean/renderer";
 import type { SeekStats } from "@/lib/video/seek-coordinator";
-import { pathAt, pathIndex, SHOTS, type Shot } from "@/lib/world/path";
+import { pathAt, pathIndex, SHOTS, viewFor, type Shot, type View } from "@/lib/world/path";
 import type { World } from "@/lib/world/world";
 
 export type DescentMedia = {
@@ -44,17 +44,28 @@ type Props = {
   diver: ReactNode;
 };
 
+/** The text column's widest measure, in rem (matches .zone__head and friends in globals.css). */
+const COLUMN_REM = 44;
 /** The 2D water renders below screen resolution: it is soft, and phones thank us. */
 const SCENE_SCALE = { small: 0.5, large: 0.66 };
 const MAX_SCENE_PIXELS = 1_100_000;
 /** Phones draw the 2D water at 30 fps; the scroll-linked parts still follow every frame. */
 const SMALL_FRAME_MS = 1000 / 30;
-/** Vertical field of view for the 3D camera. Phones are tall, so they see more. */
-const FOV = { wide: 50, phone: 62 };
 /** Frame-time budget for the 3D world, in ms. Over it, the governor lowers resolution. */
 const BUDGET = { slow: 32, fast: 18, give_up: 55 };
 
 const noSubscription = () => () => {};
+
+/** Where the text column ends, in px from the left: the dive's first wrap's content edge plus the column's measure. */
+function columnEnd(): number {
+  const wrap = document.querySelector(".dive__content .wrap") ?? document.querySelector(".wrap");
+  if (!wrap) return 0;
+  const rect = wrap.getBoundingClientRect();
+  const style = getComputedStyle(wrap);
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const left = rect.left + parseFloat(style.paddingLeft);
+  return Math.min(rect.right - parseFloat(style.paddingRight), left + COLUMN_REM * rem);
+}
 
 type WorldHandle = { world: World; scale: number; base: number; resize: () => void };
 
@@ -243,10 +254,11 @@ export function OceanStage({ media, useFrames, footageNote, endColor, art, diver
           if (shown === "still") {
             // One frame, at the surface shot, and no motion after it.
             const phone = isSmallScreen();
-            const p = pathAt(0, phone);
+            const view = viewFor(stage.clientWidth, stage.clientHeight, columnEnd());
+            const p = pathAt(0, phone, SHOTS, view);
             world.frame({
               time: 12,
-              camera: { position: p.cam, target: p.look, fov: phone ? FOV.phone : FOV.wide },
+              camera: { position: p.cam, target: p.look, fov: view.fov },
               diver: { position: p.diver, heading: p.heading, pitch: p.pitch, effort: 0.6, visible: true },
               waterline: p.waterline,
               end: 0,
@@ -295,12 +307,14 @@ export function OceanStage({ media, useFrames, footageNote, endColor, art, diver
     let marks: number[] = [];
     let diveTop = 0;
     let descentEnd = 0;
+    let view: View = viewFor(stage.clientWidth, stage.clientHeight, columnEnd());
     let samples: number[] = [];
 
     // Where each shot happens, in page scroll. Measured from the live layout, so
     // the camera always meets its section, whatever the screen size or text length.
     const measure = () => {
       const vh = window.innerHeight;
+      view = viewFor(stage.clientWidth, stage.clientHeight, columnEnd());
       const y = window.scrollY;
       diveTop = wrapper.getBoundingClientRect().top + y;
       const reef = wrapper.querySelector("#experiences");
@@ -332,7 +346,7 @@ export function OceanStage({ media, useFrames, footageNote, endColor, art, diver
       const time = (now - start) / 1000;
 
       const u = pathIndex(current, marks);
-      const path = shots.length > 1 ? pathAt(u, phone, shots) : pathAt(0, phone);
+      const path = shots.length > 1 ? pathAt(u, phone, shots, view) : pathAt(0, phone, SHOTS, view);
       // The surface and descent part, for the 2D water and the flat diver.
       const state = stageState({ scrolled: current - diveTop, height: descentEnd - diveTop, viewport: stage.offsetHeight });
 
@@ -348,7 +362,7 @@ export function OceanStage({ media, useFrames, footageNote, endColor, art, diver
       if (handle) {
         handle.world.frame({
           time,
-          camera: { position: path.cam, target: path.look, fov: phone ? FOV.phone : FOV.wide },
+          camera: { position: path.cam, target: path.look, fov: view.fov },
           diver: { position: path.diver, heading: path.heading, pitch: path.pitch, effort: path.effort, visible: true },
           waterline: path.waterline,
           end: 0,

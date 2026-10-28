@@ -1,19 +1,23 @@
-# The descent: footage production and engineering notes
+# The ocean stage: the 3D world, footage, and engineering notes
 
-The hero and the first-dive steps scroll over one **ocean stage**: a full-screen
-layer that stays put (CSS `position: sticky`) while the content moves over it. As
-you scroll, the camera sinks: the waterline rises out of frame, the water darkens,
-the light rays thin out, and the diver drifts down and away. At the end of the
-descent the stage hands off, color for color, to the reef section below.
+Everything from the hero to the end of the ascent scrolls over one **ocean stage**: a
+full-screen layer that stays put (CSS `position: sticky`) while the content moves
+over it. As you scroll, a camera travels through an underwater world: it sinks below
+the waterline, follows the diver down to the sand, glides along the reef past the
+three experiences, looks up at snorkelers, goes deeper to the descent line for the
+courses, holds the line at the safety stop, and rises to surface again before the
+shore.
 
 **Status:** built and tested. **No footage exists yet**, so the stage shows the
-**live water scene**: a WebGL shader (`lib/ocean/shader.ts`) that draws the sky,
-sun, waterline, light rays, and drifting particles from math, with no image files.
-Real footage is an optional upgrade: add the files below and rebuild, and the
-stage scrubs the footage instead.
+**3D world** (`lib/world/`), a real-time scene in three.js built from code and a
+fixed seed, with no image or model files. Where the world is too heavy, the lighter
+**2D water scene** (`lib/ocean/shader.ts`) covers the surface and descent instead.
+Real footage is an optional upgrade for the surface and descent: add the files below
+and rebuild, and the stage scrubs the footage there instead.
 
 ## Contents
 
+0. [The 3D world](#0-the-3d-world)
 1. [What to film](#1-what-to-film)
 2. [Files and size budget](#2-files-and-size-budget)
 3. [Preparing the files](#3-preparing-the-files)
@@ -29,9 +33,69 @@ stage scrubs the footage instead.
 
 ---
 
+## 0. The 3D world
+
+**Why real-time 3D.** The brief asked for real depth: foreground, midground, and
+background, a camera moving through water, light shafts, caustics on the reef, fog,
+and one consistent lighting logic. There is no footage, no photos, and no working
+video-generation service in this project (Higgsfield was not reachable from the build
+environment, and nothing was generated or bought). Layered 2D art can fake parallax
+but not a camera that turns, rises, and looks up. So the world is real-time 3D,
+procedurally built, with the content kept in plain HTML over it. It is
+illustration, not photography: it never claims to be Tabitha's site or trips.
+
+**What is in it.** All in `lib/world/`:
+
+| File | What it builds |
+|---|---|
+| `look.ts` | The palette and light (sun direction and color, absorption, fog), and the quality presets |
+| `glsl.ts` | The one light model every material shares: sun light losing red, then green, with depth; caustics projected along the light; distance fog toward the water's own color; rim light from the water |
+| `noise.ts` | Seeded noise, the tileable caustic pattern, and a noise texture |
+| `terrain.ts` | The sand floor (ripples, rubble on slopes, seagrass beds) and the seagrass blades |
+| `reef.ts` | Rock mounds and their growth: sea rods, sea fans, brain and star coral heads, barrel and tube sponges |
+| `water.ts` | The water around you, the surface from below (Snell's window), light shafts, drifting particles, and the over-under sky pass |
+| `creatures.ts` | The diver (with a kick that follows effort), bubbles, fish schools, the descent line and buoy |
+| `places.ts` | Landmarks the scene and the camera share: the descent line, the snorkelers |
+| `path.ts` | The camera's journey (below) |
+| `world.ts` | Puts it together: `createWorld(canvas, quality)` returns `resize`, `frame`, `dispose` |
+
+**The camera path** (`path.ts`). Each shot belongs to an element on the page and is
+exact when that element's top reaches a set height on screen; between shots the camera
+glides on a smooth curve. So the camera meets its section at any screen size and any
+text length. Each shot names a subject (the diver by default, or the snorkelers, or
+the descent line), and the camera turns so the subject sits about 74% across on wide
+screens (right of the text column) and 62% on phones. The waterline is part of each
+shot: at rest in the hero, high in the frame for the sinking beat half a screen down,
+out of frame through the dive, and back for the surfacing shot.
+
+**Text over the world.** A veil of deep water behind the text column, stronger where
+a shot looks up at the bright surface (`scrim` per shot), plus soft pools where text
+sits outside the column. See `docs/design-system.md`. `tests/world.spec.ts` measures
+it from pixels.
+
+**Loading.** three.js and the world load with a dynamic import in idle time after the
+page has painted (tested), only for the world and still tiers. The chunk is 155 KB
+gzipped (610 KB raw). Until it is ready, the illustrated surface shows; the canvas
+fades in over it once the first frame is drawn.
+
+**Cost.** About 0.6 million triangles at high, 0.43 at medium, 0.31 at low, in about
+40 to 75 draw calls (instancing for grass, fish, and reef growth). Drawing resolution
+is capped at 1.5 device pixels and scaled by the preset (100%, 75%, 55%). Phones
+start at low, small-memory or 4-core devices at medium.
+
+**The governor.** Every 45 frames the controller averages frame time. Over 32 ms it
+lowers resolution (down to 60%); under 18 ms it raises it again; over 55 ms at the
+lowest resolution it hands over to the 2D water. A lost WebGL context also hands over.
+`?renderer=` or `?quality=` in the URL turn the governor off, for checking.
+
+**Not measured yet.** Frame rates on real phones and GPUs. The test browser renders
+WebGL in software (about a frame a second at 1440 × 900), so it proves correctness
+and fallbacks, not smoothness. See the QA checklist.
+
 ## 1. What to film
 
-Only needed if Tabitha wants real footage in place of the live water scene. One
+Only needed if Tabitha wants real footage in place of the world for the surface and
+descent. One
 continuous shot, or a few with soft dissolves, 10 to 18 seconds long. Slow, steady
 camera movement throughout. No cuts, shake, flashes, or heavy color grading. No text
 in the footage: all words on screen are HTML laid over it.
@@ -61,7 +125,7 @@ footage never competes with a drawing.
 
 ## 2. Files and size budget
 
-Only for the footage version: without these files the live water scene runs.
+Only for the footage version: without these files the world runs.
 All paths are under `public/`. The site checks which exist **at build time**
 (`components/immersive/Dive.tsx`), so add them and redeploy.
 
@@ -71,7 +135,7 @@ All paths are under `public/`. The site checks which exist **at build time**
 | `video/guided-descent.webm` | Yes | 8 MB max | VP9. Fallback source. |
 | `images/guided-descent-poster.webp` | Yes | 250 KB max | First frame, 1920 wide. Shown before and instead of the video. |
 | `images/guided-descent-mobile.webp` | Yes | 150 KB max | First frame, 4:5 crop, 1080 wide. Phone poster. |
-| `video/guided-descent-mobile.mp4` | Optional | 3 MB max | 960 wide. Without it, phones keep the live water scene. |
+| `video/guided-descent-mobile.mp4` | Optional | 3 MB max | 960 wide. Without it, phones keep the world. |
 | `video/frames/` + `manifest.json` | Optional | 6 MB max | Only with `NEXT_PUBLIC_USE_FRAME_SEQUENCE=true`. See section 5. |
 
 **Final media sizes:** not yet recorded, because no footage exists. After preparing
@@ -233,11 +297,12 @@ desktops at most 180. Leaving the page releases every image.
 | File | Role |
 |---|---|
 | `content/site.ts` (`descent`, `hero`) | The step copy, the hero copy, footage paths, and the footage note |
-| `components/immersive/Dive.tsx` | Server component. Checks which footage files exist at build time, and wraps the hero and descent around the stage. |
-| `components/immersive/OceanStage.tsx` | Client component. Picks the tier, owns the one scroll controller, and moves the diver. |
+| `components/immersive/Dive.tsx` | Server component. Checks which footage files exist at build time, and wraps every section from the hero to the ascent around the stage. |
+| `components/immersive/OceanStage.tsx` | Client component. Picks the tier, loads the world, owns the one scroll controller and the governor. |
+| `lib/world/` | The 3D world and its camera path (section 0) |
 | `components/art/SurfaceArt.tsx` | The over-under view drawn in CSS and SVG: shown first, and kept for the static tier |
 | `components/art/Diver.tsx` | The diver silhouette |
-| `lib/ocean/shader.ts`, `lib/ocean/renderer.ts` | The live water scene: one fragment shader, plain WebGL 1, no library |
+| `lib/ocean/shader.ts`, `lib/ocean/renderer.ts` | The 2D water scene: one fragment shader, plain WebGL 1, no library |
 | `hooks/useVideoScrub.ts` | Waits for `loadedmetadata`, routes seeks through the coordinator, detects failed sources |
 | `hooks/useFrameSequence.ts` | The optional image-sequence renderer |
 | `lib/video/seek-coordinator.ts` | One active seek, one latest queued seek, nothing else |
@@ -245,13 +310,14 @@ desktops at most 180. Leaving the page releases every image.
 | `lib/motion/preferences.ts` | Reduced motion, data saver, slow connection, low-end device, tier choice |
 | `app/globals.css` (the "dive" block) | The stage, the static surface, the steps, the diver's bubbles |
 
-**One scroll value.** A single `requestAnimationFrame` loop reads how far the page
-has scrolled past the top of the dive, smooths it like a weighted camera (about
-0.14 s to catch up, `follow` in `lib/motion/descent.ts`), and derives everything from
-it: the shader's depth, the footage time, the frame, the diver's position, and the
-hand-off color at the end. Nothing else listens to scroll, so nothing drifts out of
-sync. The loop runs only while the stage is on screen and the tab is visible; for
-footage it also stops once the camera has settled.
+**One scroll value.** A single `requestAnimationFrame` loop reads the page's scroll,
+smooths it like a weighted camera (about 0.14 s to catch up, `follow` in
+`lib/motion/descent.ts`), and derives everything from it: where the 3D camera is on
+its path, the 2D water's depth, the footage time, the frame, the flat diver's
+position, and the hand-off color at the end of the descent. Nothing else listens to
+scroll, so nothing drifts out of sync. The loop runs only while the stage is on screen
+and the tab is visible; for footage it also stops once the camera has settled. The
+stage marks `data-settled` when the camera has caught up, for tests.
 
 **No GSAP.** The earlier version loaded GSAP and ScrollTrigger (about 44 KB gzipped)
 only to measure progress. The stage now needs one scroll reading and one smoothing
@@ -259,13 +325,18 @@ function, so they were removed.
 
 **No pinning, no scroll hijacking.** The content is ordinary page content in normal
 flow. The stage behind it is `position: sticky` inside the dive wrapper, so it stays
-on screen exactly as long as the hero and descent do, then scrolls away with the
-last of them. Scrolling is always the browser's own.
+on screen exactly as long as the dive does (hero to ascent), then scrolls away with
+the wave edge into the shore. Scrolling is always the browser's own.
 
-**The hand-off.** Over the last screen of the descent, the shader blends the bottom
-of the frame into `#0a3656` (`END_COLOR` in `Dive.tsx`, `--deep` in the CSS), and the
-stage's text scrim fades out, so the stage ends on exactly the color the reef section
-starts with. A test samples the pixels on both sides of the seam.
+**The hand-offs.** With the world, there is no seam inside the dive: once the world
+paints, each zone's own water and flat art fade out, and the world is the one place
+behind everything. At the end of the ascent the camera surfaces and a wave edge, filled
+with the shore's color, carries the page onto the sand. With the 2D water, the
+surface and descent are the 2D scene and the zones from the reef on paint their own
+water over it: over the last screen of the descent the shader blends into `#0a3656`
+(`END_COLOR` in `Dive.tsx`, `--deep` in the CSS), and once the reef's edge is on
+screen, everything below it, so the edge always meets the same color. A test samples
+the pixels on both sides of the seam.
 
 **Seeking (footage only).** Setting `currentTime` starts an asynchronous seek. The
 coordinator allows one seek in flight and remembers only the newest requested time
@@ -278,9 +349,11 @@ arrive. Tests show at most 1 in flight and 1 queued.
 
 1. The server renders the hero, the steps, and the illustrated surface as plain
    HTML and CSS. That is the first paint, with no JavaScript needed.
-2. After hydration the client picks a tier. For the live water scene it compiles the
-   shader and fades the canvas in over the illustration once the first frame is
-   drawn. The two show the same composition, so the cross-fade is soft.
+2. After hydration the client picks a tier. For the world it loads three.js in idle
+   time, builds the scene, and fades the canvas in over the illustration once the
+   first frame is drawn. For the 2D water it compiles the shader the same way. Both
+   show the same over-under composition as the illustration, so the cross-fade is
+   soft.
 3. Footage (when present) loads in idle time after hydration, and fades in over the
    poster once its first frame is decoded.
 
@@ -291,28 +364,36 @@ The client picks a tier once it is running (`chooseTier` in
 
 | Situation | What the visitor gets |
 |---|---|
-| No footage (today) | **scene:** the live water scene, driven by scroll |
-| Desktop with the video files | **video:** scroll scrubs the footage |
+| No footage (today), WebGL 2 | **world:** the 3D world, driven by scroll |
+| No footage, WebGL 1 only | **scene:** the 2D water for the surface and descent, then each zone's own water and art |
+| The world proves too slow, or the GPU drops it | **scene** |
+| Desktop with the video files | **video:** scroll scrubs the footage through the surface and descent |
 | Phone with the mobile cut | **video**, using `guided-descent-mobile.mp4` |
-| Phone without the mobile cut | **scene** |
+| Phone without the mobile cut | **world** (or **scene**) |
 | `NEXT_PUBLIC_USE_FRAME_SEQUENCE=true` with frames | **frames:** a canvas image sequence |
-| Both video sources fail, or the frames fail | **scene** |
-| Reduced motion, data saver, a 2G connection, or a very low-memory device | **static:** the illustrated surface (or the poster) at the top, the steps in normal flow, nothing downloaded |
-| WebGL missing, or its context is lost | **static** |
+| Both video sources fail, or the frames fail | **world** (or **scene**) |
+| Reduced motion, WebGL 2, no footage | **still:** one frame of the world at the surface, drawn once; the steps in normal flow |
+| Reduced motion with footage | **static**, showing the footage poster |
+| Data saver, a 2G connection, or a very low-memory device | **static:** the illustrated surface, nothing downloaded |
+| WebGL missing | **static** |
 | No JavaScript | **static**, rendered by the server |
 
-Phones draw the water at half resolution and 30 frames a second, and the diver
-fades out as the hero leaves (the text is full width there). With reduced motion the
-steps also lose their screen-tall spacing and read as a compact list.
+Phones start the world at the low preset, at a wider field of view, with the camera
+turned toward each shot's subject. The 2D water on phones draws at half resolution
+and 30 frames a second. With reduced motion the steps also lose their screen-tall
+spacing and read as a compact list.
 
 ## 8. Performance findings
 
 Measured on the production build:
 
-- **The site's own JavaScript** (stage, shader, scroll controller, planner, gauge,
-  page script) is one chunk of 17.6 KB gzipped. Everything else is the Next.js and
-  React runtime.
-- **Live water:** rendered at about two thirds of screen resolution on desktops and
+- **First paint:** the 3D world is not in it. three.js and the world (155 KB
+  gzipped) load in idle time afterwards, only when the world or still tier runs
+  (tested: the chunk starts after first contentful paint).
+- **The 3D world:** see section 0 for triangles, draw calls, resolution, and the
+  governor. It stops drawing as soon as the dive leaves the screen (tested), and
+  under reduced motion it draws exactly one frame (tested).
+- **2D water:** rendered at about two thirds of screen resolution on desktops and
   half on phones, capped at 1.1 megapixels, with one draw call per frame. It stops
   drawing as soon as the stage leaves the screen (tested).
 - **Downloads:** no image or video files for the stage at all without footage. With
@@ -321,8 +402,9 @@ Measured on the production build:
 - **Seeks during rapid alternating scrolling:** never more than 1 in flight and 1
   queued (tested).
 - **Memory:** heap growth under 2 MB after scrolling through 8 times (tested).
-- **Not yet measured:** frame rate on a mid-range phone, and real footage sizes and
-  seek times (see the QA checklist).
+- **Not yet measured:** frame rates of the world on real phones and GPUs (the test
+  browser renders in software), and real footage sizes and seek times (see the QA
+  checklist).
 
 ## 9. Accessibility
 
@@ -330,27 +412,48 @@ Measured on the production build:
   ordered list of steps, each read as "Step 1 of 3: On shore" with a real heading.
 - The canvas, video, illustration, diver, and scrims are hidden from assistive
   technology. All meaning is in the HTML.
-- White text over the moving water passes WCAG AA, measured from the rendered pixels
-  (axe cannot see into a canvas): at 1440 and 375 px wide, live and static, the
-  headline is at least 3:1 and every other line at least 4.5:1. Soft pools of deeper
-  water behind the text, and a solid patch behind the small location line, make this
-  hold wherever the light rays fall.
+- Text over the world and the water passes WCAG AA, measured from the rendered
+  pixels (axe cannot see into a canvas): large text at least 3:1, everything else at
+  least 4.5:1. Over the world, every text in the dive is measured at ten points of the
+  journey at 1440 and 375 px (`tests/world.spec.ts`); over the 2D water and the still
+  tiers, the hero and steps (`tests/descent.spec.ts`). The per-shot veil and the soft
+  pools make this hold wherever the light falls.
 - Keyboard: nothing in the descent is hidden or pinned, so focus order is reading order.
 - The depth gauge on wide screens names zones ("Surface", "The reef"), never depths in
   feet, and is hidden from assistive technology.
 
 ## 10. Testing
 
-Automated, in `tests/descent.spec.ts` (run with `npm test`). Port 3100 serves the site
-as it ships; port 3101 is a build that treats the footage as present, with synthetic
-test-pattern fixtures from `tests/fixtures/guided-descent` served at the real paths:
+Automated, in `tests/world.spec.ts` and `tests/descent.spec.ts` (run with `npm test`).
+Port 3100 serves the site as it ships; port 3101 is a build that treats the footage as
+present, with synthetic test-pattern fixtures from `tests/fixtures/guided-descent`
+served at the real paths.
+
+The 3D world (`tests/world.spec.ts`):
+
+- the camera path: scroll to shot index, the waterline from surface to surfacing,
+  every shot's subject right of the column on wide screens and in frame on phones,
+  the camera never under the sand or above the surface
+- renders behind the dive, replaces the zones' flat water and art, stays pinned,
+  never requests footage, loads three.js only after first paint
+- follows the camera path section by section in the page
+- text contrast over the world at 1440 and 375 px, at ten points of the journey
+- stops drawing off screen; draws one frame under reduced motion; a forced tier does
+  not override reduced motion
+- hands over to the 2D water when WebGL 2 is missing or the context is lost
+- layout shift while it starts
+- screenshots of the surface, sinking, descent, reef, snorkeling, deeper, safety
+  stop, surfacing, and booking at 375×812, 768×1024, and 1440×900 in
+  `test-results/screenshots/world-*.png`
+
+The descent, the 2D water, and footage (`tests/descent.spec.ts`):
 
 - the scroll mapping, smoothing, footage time, frames, and the diver on phones
 - the seek coordinator: one active and one queued seek, direction changes, frame
   presentation, timeouts, cleanup
-- the live water scene: renders, sticks, lets the page continue, never requests
-  footage, stops drawing off screen, hands off to the reef without a seam
-- contrast of the hero and step text over the water at 1440 and 375 px, live and static
+- the 2D water scene: renders, sticks, gives way to the reef's own water, never
+  requests footage, stops drawing off screen, hands off to the reef without a seam
+- contrast of the hero and step text over the water at 1440 and 375 px, live and still
 - WebGL unavailable, reduced motion, and no JavaScript
 - layout shift while it starts
 - footage: metadata, scrubbing forward and back, rapid direction changes, resize,
@@ -362,10 +465,14 @@ test-pattern fixtures from `tests/fixtures/guided-descent` served at the real pa
 
 ### Manual QA checklist (before launch)
 
-- [ ] iPhone Safari and Android Chrome on a mid-range phone: the live water is smooth,
-      scrolling never stutters, the page scrolls past the descent normally
+- [ ] iPhone Safari and Android Chrome on a mid-range phone: the world is smooth (or
+      hands over to the 2D water within a few seconds), scrolling never stutters,
+      the page scrolls through the dive normally. Note which tier and `data-scale`
+      the stage settles on
+- [ ] A recent laptop with integrated graphics, and a desktop GPU: the world holds
+      full resolution (`data-scale` absent or 1.00)
 - [ ] Desktop Safari, Chrome, Firefox, Edge: forward, back, fast flicks, trackpad and wheel
-- [ ] Reduced motion on (macOS and iOS settings): the still surface, compact steps
+- [ ] Reduced motion on (macOS and iOS settings): one still frame, compact steps
 - [ ] Throttle to Slow 4G: the illustrated surface and the text come first
 - [ ] 200% browser zoom: nothing clipped
 - [ ] VoiceOver and NVDA: headings and steps read in order, nothing decorative announced
@@ -383,17 +490,24 @@ test-pattern fixtures from `tests/fixtures/guided-descent` served at the real pa
   steps of a first scuba experience (briefing on shore, practice in about three feet of
   water, a guided dive of roughly 30 minutes), all from her own listings, plus a close
   with the time, ages, and booking button.
-- **A live water scene instead of an illustration** while no footage exists.
+- **A real-time 3D world instead of footage or an illustration** while no footage
+  exists, behind the whole dive rather than only the descent (section 0). No
+  generated video was used: no generation service was available, and generated
+  footage could be mistaken for Tabitha's real trips.
 - **MP4 first, WebM second.** Based on the measurements in section 4.
 - **The gauge shows zone names, not depths in feet,** so nothing reads as a measured
   dive depth.
 
 ## 12. Open decisions
 
-- **Footage:** whether to film at all. The live water scene is a finished design on
-  its own; footage would add real place and people (see section 1).
+- **Footage:** whether to film at all. The world is a finished design on its own;
+  footage would add real place and people (see section 1). With footage, the surface
+  and descent show it, and the zones after it show their own water rather than the
+  world.
 - **Phones:** if footage is made, whether to make the 960 px mobile cut. Without it,
-  phones keep the live water scene.
+  phones keep the world.
+- **Generated video:** if a generation service is ever used for atmosphere, approve
+  costs first, pilot one clip, and never present it as Tabitha's trips or site.
 - **Frame sequence:** stays off unless real-device testing shows video seeking is not
   good enough.
 - **Audio:** none. Add only if Tabitha asks, and never autoplay it.

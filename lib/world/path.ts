@@ -333,13 +333,33 @@ export type PathState = {
   waterline: number;
 };
 
-/** Everything the camera and diver are doing at continuous shot index `u`. */
-export function pathAt(u: number, phone: boolean, shots: readonly Shot[] = SHOTS): PathState {
+/**
+ * The screen the camera frames for: its shape, its vertical field of view, and
+ * where across it the subject goes. Defaults to FRAME's typical screens.
+ */
+export type View = { aspect: number; fov: number; x: number; portrait: boolean };
+
+/** The framing for a screen of `width` by `height` whose text column ends at `columnEnd` px. */
+export function viewFor(width: number, height: number, columnEnd: number): View {
+  const aspect = width / Math.max(1, height);
+  if (aspect < 1) return { aspect, fov: FRAME.phone.fov, x: FRAME.phone.x, portrait: true };
+  // Right of the text column, a little under halfway into the open water.
+  const edge = Math.min(0.9, Math.max(0, columnEnd / Math.max(1, width)));
+  return { aspect, fov: FRAME.wide.fov, x: edge + (1 - edge) * 0.4, portrait: false };
+}
+
+/**
+ * Everything the camera and diver are doing at continuous shot index `u`.
+ * `phone` picks the phone versions of shots and the phone waterline; `view`
+ * says which screen to frame for.
+ */
+export function pathAt(u: number, phone: boolean, shots: readonly Shot[] = SHOTS, view?: View): PathState {
   const cams = shots.map((s) => (phone && s.phone?.cam) || s.cam);
   // The camera turns to put each shot's subject in its place in the frame.
-  const frame = phone ? FRAME.phone : FRAME.wide;
+  const frame: View = view ?? (phone ? { ...FRAME.phone, portrait: true } : { ...FRAME.wide, portrait: false });
   const looks = shots.map((s, i) => {
-    const x = phone ? frame.x : (s.frameX ?? frame.x);
+    // On wide screens a shot can ask for its subject a little left or right of the usual place.
+    const x = frame.portrait ? frame.x : frame.x + (s.frameX ?? FRAME.wide.x) - FRAME.wide.x;
     return aim(cams[i], (phone && s.phone?.look) || s.look, s.subject ?? s.diver, x, frame);
   });
   const divers = shots.map((s) => s.diver);

@@ -17,15 +17,18 @@ forms. Do not add Supabase, Stripe, or auth. Structure the code so they can be a
 - Statically rendered. No server actions, no API routes, no environment secrets
 - Fonts through `next/font`
 - Deploy target: Vercel
-- Animation: CSS, plus one hand-written WebGL fragment shader for the water behind the
-  hero and descent (`lib/ocean/`). No animation libraries: GSAP was removed in Oct 2026
-  when the descent stopped needing it. No Three.js. Scroll stays native: never hijack
-  or smooth-scroll the page
+- Rendering and animation: CSS; a real-time 3D underwater world in three.js
+  (`lib/world/`) behind the dive; and a hand-written 2D WebGL water shader
+  (`lib/ocean/`) as its lighter fallback. three.js is the one rendering dependency and
+  is always loaded lazily (dynamic import in idle time, never in the first-paint
+  bundle). No animation libraries: GSAP was removed in Oct 2026. Scroll stays native:
+  never hijack, pin, or smooth-scroll the page
 - Client components: `components/page-script.tsx`, `components/immersive/OceanStage.tsx`
   and `DepthGauge.tsx`, and `components/forms/GroupPlanner.tsx`. Everything else stays
   a Server Component
-- Generated art (the reef) is built at build time from a seed, served as prerendered
-  SVG from `app/art/`. Same input, same picture, every build
+- Generated art is seeded: the flat reef is built at build time and served as
+  prerendered SVG from `app/art/`; the 3D world is built in the browser from a fixed
+  seed (`SEED` in `lib/world/world.ts`). Same input, same picture, every time
 
 ## Rule zero: do not invent business facts
 
@@ -100,8 +103,16 @@ Never show: the "Test Tour" listing, or anything called "Service 11".
 
 In Oct 2026 the owner asked for a premium, scroll-driven site that feels like
 descending into Florida's underwater world. It replaced the "Aquans" framed-panel
-design (still in git history, commit 64b1e89). One long page, full-bleed sections,
-read as one dive from the surface and back:
+design (still in git history, commit 64b1e89). A second pass the same month made it
+feel like being under water rather than a site about it: a real-time 3D world behind
+the dive, with one camera traveling through it as you scroll. The full system (color,
+type, spacing, buttons, forms, motion, the world's look, text over imagery, images and
+video) is in `docs/design-system.md`.
+
+One long page, read as one dive from the surface and back. From the hero to the end
+of the ascent the content sits in one editorial column on the left (44rem) over the
+world; on wide screens the camera frames its subject (the diver, the snorkelers, the
+descent line) about three quarters across, right of the column:
 
 ```
 HEADER   Links left, flag + "Tabs AquaQuest" centered in the serif, Contact and
@@ -114,17 +125,20 @@ DESCENT  "New to scuba? Here is how your first dive goes." Three real steps (bri
          on shore, about three feet of water, a guided dive of roughly 30 minutes),
          then the 90-minute close and Book Discover Scuba. The stage behind darkens
          as you scroll. See docs/video-production.md before changing it
-REEF     "Three ways into the water": the three experiences as editorial spreads
-         (pitch, price, Book on the left; steps and specs on the right) over a
-         generated reef floor and a passing school of fish
+REEF     "Three ways into the water": the three experiences as editorial entries in
+         the column (pitch, price, Book, then steps and specs), with the world's reef
+         passing on the right (the flat generated reef and fish when the world is off)
 DEEPER   Get certified: Open Water, Advanced, Rescue hanging off a descent line from a
-         dive-flag buoy, then online learning > confined water > open water (01 02 03)
-SAFETY   Safety stop: Meet Tabitha, "Good to know before you go" essentials, and the
-STOP     Mandi K. testimonial, big centered serif
-ASCENT   Bring your people: occasions, Discover Scuba note, Ask about group sizes, and
-         the group planner (drafts an email; never claims to send)
-SHORE    The surface seen from below, then Where we meet (address, Maps, copy, bridge
-         line art) and the FAQ on warm sand-white
+         dive-flag buoy, then online learning > confined water > open water (01 02 03).
+         In the world, the diver reaches the real descent line on the right
+SAFETY   Safety stop: Meet Tabitha, "Good to know before you go" as a ruled list, and
+STOP     the Mandi K. testimonial in big serif, all in the column; the diver holds the
+         line on the right, looking up at the light
+ASCENT   Bring your people: occasions, Discover Scuba note, Ask about group sizes, then
+         the group planner below (drafts an email; never claims to send). The camera
+         rises and surfaces: the over-under view returns at the end
+SHORE    A wave edge hands the dive to the shore, then Where we meet (address, Maps,
+         copy, bridge line art) and the FAQ on warm sand-white
 SURFACE  Ready when you are: a "Where are you starting from?" chooser (radio buttons
          and CSS, works without JS), every service and price, phone and email, Groupon
 FOOTER   Ink, wordmark, links
@@ -144,29 +158,43 @@ FOOTER   Ink, wordmark, links
   Ascent, Back on shore, Back at the surface
 - Every section sets `data-tone` (light or dark), which sets text, rules, focus rings,
   and button colors. Primary buttons are white on dark water, ocean blue on light
-- The ocean stage: tiers video > frames > scene (live WebGL) > static (CSS/SVG).
-  Footage is optional; without it the live water scene runs. The stage is sticky
-  behind the hero and descent and hands off to the reef color for color
-- Motion: the live water, the diver's descent and bubbles, fish crossing, rising
-  bubbles at the safety stop, the reef drifting in depth (CSS scroll-driven where
-  supported), gentle reveals. Paused offscreen, all off under
-  `prefers-reduced-motion`, where the stage is the still illustration and the steps
-  read as a compact list
+- The ocean stage: tiers video > frames > world (3D) > scene (2D WebGL) > still (one
+  frame of the world, for reduced motion) > static (CSS/SVG). Footage is optional and
+  covers the surface and descent only; without it the world runs. The stage is sticky
+  behind the whole dive, hero through ascent. Once the world paints, each zone's flat
+  water and art fade out so the world reads as one place; in the other tiers the zones
+  keep their own water and the 2D scene hands off to the reef color for color. A
+  frame-time governor lowers resolution and hands over to the 2D water on slow
+  devices. `?renderer=` and `?quality=` force a tier or preset for checking (reduced
+  motion still wins)
+- The camera path (`lib/world/path.ts`): each shot is tied to an element on the page,
+  so the camera meets its section at any screen size. Shots aim at their subject so it
+  sits right of the column on wide screens and just off center on phones. Entering the
+  water is slow: a sinking beat between the surface and the descent
+- Motion: the camera's travel, surge in the sea rods and seagrass, fish schools, the
+  diver's kick and bubbles, caustics, light shafts, gentle reveals. Paused offscreen,
+  all off under `prefers-reduced-motion`, where the stage is one still frame (or a
+  footage poster, once footage exists) and the steps read as a compact list
 - Depth is atmosphere: the gauge and labels never show feet or meters
 - Sticky header. On phones, a sticky bottom "Book a dive" bar that steps aside while
   the hero buttons or the booking section are on screen
 - "Have a Groupon?" tells voucher holders to call or email to schedule
 - Photos: none supplied. Sections are designed to stand without them; real photos
-  slot in via `photos` in `content/site.ts` (see `docs/asset-manifest.md`). No
-  "photo coming soon" boxes in production. No AI-generated or stock photos presented
-  as Tabitha, her customers, or her dive sites. Illustrated wildlife stays generic
-  and Florida-appropriate (sea fans, sponges, seagrass, reef fish), never a promise of
-  what you'll see
+  slot in via `photos` in `content/site.ts` (see `docs/asset-manifest.md`), flat in the
+  column with a small radius. No "photo coming soon" boxes in production. No
+  AI-generated or stock photos presented as Tabitha, her customers, or her dive sites.
+  The 3D world is illustration: a generic Florida reef, not Blue Heron Bridge; its
+  diver and snorkelers are silhouettes, never stand-ins for real people. Wildlife
+  stays generic and Florida-appropriate (sea fans, sea rods, sponges, coral heads,
+  seagrass, reef fish), never a promise of what you'll see
 
-Avoid: purple gradients, glowing blobs, glassmorphism beyond the header and booking
-bar, all-caps labels, two-tone headings anywhere but "Three ways into the water",
-"Dive into adventure" filler, custom cursors, scroll-jacking, long empty stretches of
-animation, and text over busy imagery without a measured contrast check.
+Avoid: purple gradients, glowing blobs or outlines, glassmorphism beyond the header
+and booking bar, generic three-card rows, floating photos with big rounded corners,
+scuba-dashboard gauges with numbers, bouncing or spinning elements, all-caps labels,
+two-tone headings anywhere but "Three ways into the water", "Dive into adventure"
+filler, custom cursors, scroll-jacking, long empty stretches of animation, and text
+over the world or footage without a measured contrast check (the per-shot veil in
+`app/globals.css`, measured in `tests/world.spec.ts`).
 
 ## Copy voice
 
@@ -176,8 +204,9 @@ trusting. Sentence case, active voice, short sentences, no em dashes.
 ## Quality bar
 
 - Semantic HTML, one h1, skip link, visible focus, 44px touch targets, WCAG 2.2 AA
-  contrast on every section. Text over the live water is checked from rendered pixels
-  in `tests/descent.spec.ts`, since axe cannot see into a canvas
+  contrast on every section. Text over the world and the 2D water is checked from
+  rendered pixels in `tests/world.spec.ts` and `tests/descent.spec.ts`, since axe
+  cannot see into a canvas
 - `prefers-reduced-motion`: no floating, flowing, or turning animations. All content
   still visible
 - Every section readable with JavaScript disabled. Reveals only hide content that
@@ -191,8 +220,10 @@ trusting. Sentence case, active voice, short sentences, no em dashes.
 
 ## Docs to keep current
 
-- `docs/video-production.md`: the ocean stage, the optional footage brief, encoding,
-  measurements, QA
+- `docs/design-system.md`: tokens, type, layout, components, motion, the world's look,
+  text over imagery, image and video rules
+- `docs/video-production.md`: the ocean stage and its tiers, the 3D world, the optional
+  footage brief, encoding, measurements, QA
 - `docs/content-needed.md`: every unresolved fact and what it blocks
 - `docs/asset-manifest.md`: every placeholder image and the real photo it needs
 - `README.md`: run, build, deploy, and how to edit `content/site.ts`

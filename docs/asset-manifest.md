@@ -1,8 +1,9 @@
 # Asset manifest
 
 No photos, logo files, or footage have been supplied yet. Everything on the site is
-drawn in code: a live water scene, CSS and SVG illustrations, and a reef generated
-when the site is built. Nothing on the page pretends to be a photo, and no
+drawn in code: a real-time 3D underwater world, a lighter 2D water scene for devices
+the world is too heavy for, CSS and SVG illustrations, and a flat reef generated when
+the site is built. No image, model, or video files were generated or bought for it. Nothing on the page pretends to be a photo, and no
 "photo coming soon" boxes appear in production. No AI-generated or stock photos may
 stand in for Tabitha, her customers, or her dive sites.
 
@@ -22,20 +23,24 @@ actually in the photo. No component changes needed.
 
 | Slot id | Where it appears | Shape | Minimum size | What the real photo should show | Status |
 |---|---|---|---|---|---|
-| `tabitha-portrait` | The safety stop, under the "Meet Tabitha" heading | 4:3, rounded corners | 1600 × 1200 | Tabitha herself, face clearly visible, at the water or in gear. The most important photo on the site. | Missing |
+| `tabitha-portrait` | The safety stop, under the "Meet Tabitha" heading | 4:3, flat in the column, small radius | 1600 × 1200 | Tabitha herself, face clearly visible, at the water or in gear. The most important photo on the site. | Missing |
 | `discover-scuba` | The reef, above the Discover Scuba "How it goes" steps | 4:3 | 1600 × 1200 | A first-timer in shallow water during practice, ideally with Tabitha nearby. Calm and reassuring, not extreme. | Missing |
 | `snorkeling` | The reef, above the snorkeling steps | 4:3 | 1600 × 1200 | Snorkelers on one of her guided tours, at the surface. | Missing |
 | `group` | The ascent, under "Bring your people" | 4:3 | 1600 × 1200 | A real group from a birthday, bachelorette, or family outing, with their permission. | Missing |
 | `underwater-video` | Free underwater videos (hidden until `videosIncluded` is true) | 4:3 | 1600 × 1200 | A still from a real customer video, with their permission. | Missing, hidden |
 
-Every person shown needs to have agreed to appear on the site. Photos sit on deep
-blue sections, so slightly cool, natural color works best; avoid heavy filters.
+Every person shown needs to have agreed to appear on the site. Photos sit in the
+text column over the deep blue world, so slightly cool, natural color works best;
+avoid heavy filters. They stay flat (4px radius, no shadow, no tilt): real moments,
+not floating cards. See `docs/design-system.md`.
 
 ## Descent footage (optional)
 
-Scroll-scrubbed footage can replace the live water scene behind the hero and the
-first-dive steps. Full brief, budgets, and encoding commands:
-`docs/video-production.md`. Until these exist, the live water scene runs.
+Scroll-scrubbed footage can replace the 3D world behind the hero and the first-dive
+steps. Full brief, budgets, and encoding commands: `docs/video-production.md`. Until
+these exist, the world runs. Footage must be Tabitha's own (or clearly licensed), with
+permission from anyone shown; generated footage must never be presented as her
+trips or her dive site.
 
 | File | Required for footage | Budget | What it should show | Status |
 |---|---|---|---|---|
@@ -51,17 +56,22 @@ first-dive steps. Full brief, budgets, and encoding commands:
 
 | Piece | Where | File |
 |---|---|---|
-| Live water: sky, sun, waterline, light rays, particles | Behind the hero and descent | `lib/ocean/shader.ts` |
+| The 3D world: sand and seagrass, reef mounds with sea rods, sea fans, coral heads, and sponges; fish schools; a diver, two snorkelers, the descent line and buoy; light shafts, caustics, particles; the sky above the waterline | Behind every section from the hero to the ascent | `lib/world/` |
+| 2D water: sky, sun, waterline, light rays, particles | Behind the hero and descent where the world is too heavy | `lib/ocean/shader.ts` |
 | The same over-under view in CSS and SVG | First paint, reduced motion, no JavaScript, no WebGL | `components/art/SurfaceArt.tsx` |
-| Diver silhouette, with rising bubbles | Hero and descent, and the 404 page | `components/art/Diver.tsx` |
-| Reef floor: sea fans, sea rods, sponges, coral heads, seagrass | Bottom of the reef section, three layers plus foreground | `lib/art/reef.ts`, served from `app/art/` |
-| Schools of fish | The reef and the ascent | `components/art/FishSchool.tsx` |
+| Flat diver silhouette, with rising bubbles | Hero and descent with the 2D water, and the 404 page | `components/art/Diver.tsx` |
+| Flat reef floor: sea fans, sea rods, sponges, coral heads, seagrass | Bottom of the reef section when the world is off | `lib/art/reef.ts`, served from `app/art/` |
+| Flat schools of fish | The reef and the ascent when the world is off | `components/art/FishSchool.tsx` |
 | Blue Heron Bridge from the park, with the meeting pin | Where we meet | `components/art/BridgeArt.tsx` |
-| The surface seen from below, on the way back up | Top of Where we meet | `components/art/BridgeArt.tsx` (`SurfaceEdge`) |
+| The wave edge from the dive onto the shore | Bottom of the ascent | `components/art/BridgeArt.tsx` (`SurfaceEdge`) |
 | Share image | Link previews | `app/opengraph-image.tsx` |
 
-The reef uses only forms found on Florida's Atlantic reefs and around Blue Heron
-Bridge. Change its look by editing the seeds and sizes in `lib/art/reef-svg.ts`.
+Both reefs use only generic forms found on Florida's Atlantic reefs (sea rods, sea
+fans, sponges, coral heads, seagrass, silvery reef fish). Neither depicts Blue Heron
+Bridge or promises a sighting, and the world's diver and snorkelers are silhouettes,
+never stand-ins for Tabitha or her customers. Change the flat reef in
+`lib/art/reef-svg.ts`, and the world in `lib/world/` (`SEED` in `world.ts` reshuffles
+it; `look.ts` holds its colors and light).
 
 ## Brand files
 

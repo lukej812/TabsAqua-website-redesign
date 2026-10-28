@@ -45,7 +45,8 @@
   /* Layout */
   --header-h: 4.25rem;
   --gutter: clamp(1.25rem, 5vw, 4rem);
-  --radius: 1.25rem;
+  --radius: 1.25rem; /* slates: the planner, the chooser */
+  --radius-photo: 0.25rem; /* photos sit flat in the column, like prints, never floating cards */
   /* Where the waterline sits in the hero. The shader reads the same numbers (OceanStage). */
   --water-top: 22%;
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -2370,7 +2371,7 @@ main:focus {
   aspect-ratio: 4 / 3;
   overflow: hidden;
   margin-block: 1.5rem;
-  border-radius: var(--radius);
+  border-radius: var(--radius-photo);
 }
 
 .photo__img {
@@ -2627,15 +2628,19 @@ main:focus {
 /* The still frame (reduced motion) gets the same base veil; nothing sets --scrim there. */
 .stage:is([data-tier="world"], [data-tier="still"]) .stage__scrim {
   --veil: calc(0.3 + var(--scrim, 0) * 0.55);
+  /* Where the text column ends: the wrap's margin, its gutter, and the 44rem
+     column (COLUMN_REM in OceanStage, which frames the subject right of it). */
+  --column-end: calc(max(0px, (100% - 78rem) / 2) + var(--gutter) + 44rem);
   opacity: 1;
   background:
     linear-gradient(to bottom, rgb(4 27 45 / 0.55), rgb(4 27 45 / 0.2) 6rem, rgb(4 27 45 / 0) 11rem),
     linear-gradient(
       90deg,
-      rgb(4 27 45 / var(--veil)) 0%,
-      rgb(4 27 45 / var(--veil)) 60%,
-      rgb(4 27 45 / calc(var(--veil) * 0.45)) 70%,
-      rgb(4 27 45 / 0) 82%
+      rgb(4 27 45 / var(--veil)) 0,
+      rgb(4 27 45 / var(--veil)) calc(var(--column-end) + 1.5rem),
+      rgb(4 27 45 / calc(var(--veil) * 0.5)) calc(var(--column-end) + 9rem),
+      rgb(4 27 45 / calc(var(--veil) * 0.18)) calc(var(--column-end) + 16rem),
+      rgb(4 27 45 / 0) calc(var(--column-end) + 24rem)
     ),
     linear-gradient(to top, rgb(4 27 45 / 0.4), rgb(4 27 45 / 0) 40%);
 }

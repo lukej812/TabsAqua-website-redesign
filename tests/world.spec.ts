@@ -9,7 +9,7 @@
  * timing anything.
  */
 import { expect, test, type Page } from "@playwright/test";
-import { FRAME, pathAt, pathIndex, REST_WATERLINE, SHOTS, type V3 } from "../lib/world/path";
+import { FRAME, pathAt, pathIndex, REST_WATERLINE, SHOTS, viewFor, type V3 } from "../lib/world/path";
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -189,6 +189,31 @@ test.describe("camera path", () => {
     }
   });
 
+  test("frames for the real screen: right of the measured column, or just off center when portrait", () => {
+    // 1280 wide, column ending at 784px: a little under halfway into the open water.
+    const wide = viewFor(1280, 800, 784);
+    expect(wide.portrait).toBe(false);
+    expect(wide.x).toBeGreaterThan(784 / 1280);
+    expect(wide.x).toBeLessThan(0.85);
+    // A landscape tablet: the column takes more of the width, so the subject moves right.
+    expect(viewFor(1024, 768, 755).x).toBeGreaterThan(wide.x);
+    // Portrait tablets and phones.
+    expect(viewFor(768, 1024, 704)).toMatchObject({ portrait: true, x: FRAME.phone.x, fov: FRAME.phone.fov });
+    for (const [i, shot] of SHOTS.entries()) {
+      for (const [w, h, end] of [
+        [1024, 768, 755],
+        [1920, 1080, 1104],
+        [768, 1024, 704],
+      ] as const) {
+        const view = viewFor(w, h, end);
+        const p = pathAt(i, false, SHOTS, view);
+        const x = screenX(p.cam, p.look, shot.subject ?? shot.diver, view.fov, view.aspect);
+        expect(x, `${shot.anchor} at ${w}x${h}`).toBeGreaterThan(view.portrait ? 0.35 : end / w + 0.03);
+        expect(x, `${shot.anchor} at ${w}x${h}`).toBeLessThan(0.95);
+      }
+    }
+  });
+
   test("never puts the camera under the sand or above the surface", () => {
     for (let u = 0; u <= SHOTS.length - 1; u += 0.05) {
       for (const phone of [false, true]) {
@@ -257,6 +282,7 @@ test.describe("the 3D world", () => {
 
   for (const { width, height } of [
     { width: 1440, height: 900 },
+    { width: 1024, height: 768 },
     { width: 375, height: 812 },
   ]) {
     test(`text over the world keeps AA contrast at ${width}px`, async ({ browser }) => {
