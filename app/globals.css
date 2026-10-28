@@ -490,7 +490,7 @@ main:focus {
 }
 
 /* ==================================================================
-   The dive: the ocean stage, with the hero and descent over it
+   The dive: the ocean stage, with every section from the surface to the ascent over it
    ================================================================== */
 
 .dive {
@@ -498,8 +498,15 @@ main:focus {
   display: grid;
   isolation: isolate;
   overflow: clip;
-  /* What shows behind the descent when the stage is static (no script, reduced motion). */
-  background: linear-gradient(180deg, #2b95ae 0, #1b78a0 18%, #135d87 42%, #0e4b72 68%, var(--deep) 100%);
+  /* What shows behind the surface when the stage is not moving (no script,
+     reduced motion): sunlit water that deepens toward the descent. */
+  background: linear-gradient(180deg, #2b95ae 0, #135d87 100svh, #135d87);
+}
+
+/* Without a moving stage the descent carries its own water, deepening to the
+   reef. Over a moving stage it stays clear, so the stage shows through. */
+.stage:not([data-live]) + .dive__content .descent {
+  background: linear-gradient(180deg, #135d87 0, #0e4b72 55%, var(--deep) 100%);
 }
 
 .dive > .stage,
@@ -2617,7 +2624,8 @@ main:focus {
    such as looking up at the surface. It fades out before the world's subject,
    so it reads as shade, not as a panel. Measured from rendered pixels in
    tests/world.spec.ts. */
-.stage[data-tier="world"] .stage__scrim {
+/* The still frame (reduced motion) gets the same base veil; nothing sets --scrim there. */
+.stage:is([data-tier="world"], [data-tier="still"]) .stage__scrim {
   --veil: calc(0.3 + var(--scrim, 0) * 0.55);
   opacity: 1;
   background:
@@ -2634,7 +2642,7 @@ main:focus {
 
 /* Narrow screens: the text spans the width, so the veil does too. */
 @media (max-width: 899px) {
-  .stage[data-tier="world"] .stage__scrim {
+  .stage:is([data-tier="world"], [data-tier="still"]) .stage__scrim {
     background:
       linear-gradient(to bottom, rgb(4 27 45 / 0.55), rgb(4 27 45 / 0.2) 6rem, rgb(4 27 45 / 0) 11rem),
       linear-gradient(rgb(4 27 45 / var(--veil)), rgb(4 27 45 / var(--veil))),

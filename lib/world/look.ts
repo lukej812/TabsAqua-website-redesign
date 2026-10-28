@@ -50,10 +50,12 @@ export type Quality = {
   particles: number;
   /** Terrain grid resolution. */
   floorSegments: number;
+  /** Share of the reef's small growth (coral heads, sponges, sea rods) drawn. Mounds always are. */
+  reef: number;
 };
 
 export const QUALITY: Record<Quality["name"], Quality> = {
-  high: { name: "high", scale: 1, grassBlades: 5200, fish: 140, particles: 1600, floorSegments: 170 },
-  medium: { name: "medium", scale: 0.75, grassBlades: 3200, fish: 100, particles: 1100, floorSegments: 130 },
-  low: { name: "low", scale: 0.55, grassBlades: 1600, fish: 60, particles: 600, floorSegments: 96 },
+  high: { name: "high", scale: 1, grassBlades: 5200, fish: 140, particles: 1600, floorSegments: 170, reef: 1 },
+  medium: { name: "medium", scale: 0.75, grassBlades: 3200, fish: 100, particles: 1100, floorSegments: 130, reef: 0.8 },
+  low: { name: "low", scale: 0.55, grassBlades: 1600, fish: 60, particles: 600, floorSegments: 96, reef: 0.55 },
 };

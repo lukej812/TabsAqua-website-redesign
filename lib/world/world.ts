@@ -113,7 +113,7 @@ export function createWorld(canvas: HTMLCanvasElement, quality: Quality): World 
   scene.add(surface);
   scene.add(buildFloor(noise, quality.floorSegments, uniforms));
   scene.add(buildSeagrass(noise, quality.grassBlades, uniforms, rnd, grassMask));
-  scene.add(buildReef(noise, uniforms, rnd));
+  scene.add(buildReef(noise, uniforms, rnd, quality.reef));
   scene.add(buildDescentLine(uniforms, LINE.x, LINE.z, floorHeight(noise, LINE.x, LINE.z)));
 
   const diver = buildDiver(uniforms);

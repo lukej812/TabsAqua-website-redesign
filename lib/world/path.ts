@@ -35,8 +35,6 @@ export type Shot = {
   scrim: number;
   /** The waterline on screen at this shot, 0 bottom to 1 top. Above 1.15 it is out of frame. */
   waterline: number;
-  /** For footage: where in the clip this shot sits, 0 to 1. Footage covers the surface to the reef. */
-  footage: number;
 };
 
 /** Waterline height for the surface shots, matching --water-top in the CSS (34% desktop, 22% phone). */
@@ -70,7 +68,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.8,
     scrim: 0,
     waterline: REST_WATERLINE.wide,
-    footage: 0,
   },
   // Sinking: half a screen down, the camera settles below the surface and the
   // waterline lifts slowly toward the top of the frame.
@@ -84,7 +81,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.75,
     scrim: 0.2,
     waterline: 0.88,
-    footage: 0.15,
   },
   // Under: the surface leaves the frame, the light thins, the descent begins.
   {
@@ -96,7 +92,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.7,
     scrim: 0.45,
     waterline: OUT,
-    footage: 0.3,
   },
   {
     anchor: ".descent__step:nth-child(1)",
@@ -107,7 +102,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.6,
     scrim: 0.5,
     waterline: OUT,
-    footage: 0.45,
   },
   {
     anchor: ".descent__step:nth-child(2)",
@@ -118,7 +112,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.5,
     scrim: 0.5,
     waterline: OUT,
-    footage: 0.6,
   },
   {
     anchor: ".descent__step:nth-child(3)",
@@ -129,7 +122,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.6,
     scrim: 0.5,
     waterline: OUT,
-    footage: 0.75,
   },
   {
     anchor: ".descent__close",
@@ -140,7 +132,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.6,
     scrim: 0.5,
     waterline: OUT,
-    footage: 0.9,
   },
   // The reef opens up on the right.
   {
@@ -152,7 +143,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.5,
     scrim: 0.55,
     waterline: OUT,
-    footage: 1,
   },
   // Discover Scuba: open sand beside the reef, where a first dive feels calm.
   {
@@ -164,7 +154,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.25,
     scrim: 0.6,
     waterline: OUT,
-    footage: 1,
   },
   // Snorkeling: the camera tilts up to the snorkelers floating at the surface.
   {
@@ -178,7 +167,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.4,
     scrim: 0.8,
     waterline: OUT,
-    footage: 1,
   },
   // Guided tours: gliding along the richest part of the reef, with the fish.
   {
@@ -190,7 +178,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.6,
     scrim: 0.6,
     waterline: OUT,
-    footage: 1,
   },
   // Deeper: past the reef to the sand channel, where the descent line hangs.
   {
@@ -204,7 +191,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.6,
     scrim: 0.7,
     waterline: OUT,
-    footage: 1,
   },
   {
     anchor: "#certification .line",
@@ -217,7 +203,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.2,
     scrim: 0.7,
     waterline: OUT,
-    footage: 1,
   },
   {
     anchor: "#certification .stages",
@@ -230,7 +215,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.2,
     scrim: 0.7,
     waterline: OUT,
-    footage: 1,
   },
   // The safety stop: holding the line, partway up, the light returning.
   {
@@ -244,7 +228,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.12,
     scrim: 0.8,
     waterline: OUT,
-    footage: 1,
   },
   {
     anchor: "#tabitha .quote",
@@ -257,7 +240,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.12,
     scrim: 0.7,
     waterline: OUT,
-    footage: 1,
   },
   // The ascent: up toward the bright surface, with the fish.
   {
@@ -269,7 +251,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.5,
     scrim: 0.8,
     waterline: OUT,
-    footage: 1,
   },
   // Surfacing: the waterline comes back down into the frame.
   {
@@ -282,7 +263,6 @@ export const SHOTS: readonly Shot[] = [
     effort: 0.4,
     scrim: 0.2,
     waterline: REST_WATERLINE.wide,
-    footage: 1,
   },
 ];
 
@@ -351,7 +331,6 @@ export type PathState = {
   effort: number;
   scrim: number;
   waterline: number;
-  footage: number;
 };
 
 /** Everything the camera and diver are doing at continuous shot index `u`. */
@@ -383,6 +362,5 @@ export function pathAt(u: number, phone: boolean, shots: readonly Shot[] = SHOTS
     effort: scalar(shots.map((s) => s.effort), u),
     scrim: scalar(shots.map((s) => s.scrim), u),
     waterline: scalar(waterlines, u),
-    footage: scalar(shots.map((s) => s.footage), u),
   };
 }

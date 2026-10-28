@@ -323,7 +323,7 @@ function instanced(geometry: THREE.BufferGeometry, material: THREE.Material, ite
   return mesh;
 }
 
-export function buildReef(noise: Noise, uniforms: Uniforms, rnd: Rnd): THREE.Object3D {
+export function buildReef(noise: Noise, uniforms: Uniforms, rnd: Rnd, density = 1): THREE.Object3D {
   const group = new THREE.Group();
   const mounds = layoutMounds(noise, rnd);
   const pick = <T,>(list: T[]) => list[Math.floor(rnd() * list.length)];
@@ -395,6 +395,18 @@ export function buildReef(noise: Noise, uniforms: Uniforms, rnd: Rnd): THREE.Obj
     else corals[0].push({ x: side, y: y - 0.05, z, sx: s * 0.4, sy: s * 0.4, sz: s * 0.4, rot: rnd() * 6.28, tilt: 0.1, tint: pick(coralTints) });
   }
 
+  // Lighter quality settings draw a share of the small growth. The same pieces
+  // drop out every time (a hash of their place, not the random stream), so the
+  // reef keeps its shape; sea rods and fans, which carry the look, drop least.
+  const thin = (items: Placed[], share: number) =>
+    share >= 1 ? items : items.filter((it) => (Math.abs(Math.sin(it.x * 12.9898 + it.z * 78.233) * 43758.5453) % 1) < share);
+  const keep = (lists: Placed[][], share: number) => lists.forEach((l, i) => (lists[i] = thin(l, share)));
+  keep(corals, density);
+  keep(tubes, density);
+  const barrelsShown = thin(barrels, density);
+  const gorgoniansShown = thin(gorgonians, Math.sqrt(density));
+  const fansShown = thin(fans, Math.sqrt(density));
+
   // Rock: crusty, mottled with algae and encrusting life, darker toward the sand.
   const rockMaterial = new THREE.ShaderMaterial({
     uniforms: { ...uniforms, uAlbedo: { value: v3("#ffffff") } },
@@ -447,7 +459,7 @@ export function buildReef(noise: Noise, uniforms: Uniforms, rnd: Rnd): THREE.Obj
       ao = inside * (0.55 + 0.45 * smoothstep(0.0, 0.7, vLocal.y));
     `),
   });
-  group.add(instanced(barrelGeometry(), spongeMaterial, barrels));
+  group.add(instanced(barrelGeometry(), spongeMaterial, barrelsShown));
   const tubeGeometries = [tubeClusterGeometry(rnd), tubeClusterGeometry(rnd)];
   tubes.forEach((items, i) => group.add(instanced(tubeGeometries[i], spongeMaterial, items)));
 
@@ -476,7 +488,7 @@ export function buildReef(noise: Noise, uniforms: Uniforms, rnd: Rnd): THREE.Obj
       "uniform sampler2D uAtlas;",
     ),
   });
-  group.add(instanced(crossedCards(0.8, 1.6), gorgonianMaterial, gorgonians));
+  group.add(instanced(crossedCards(0.8, 1.6), gorgonianMaterial, gorgoniansShown));
 
   const fanGeometry = new THREE.PlaneGeometry(1.5, 1.15, 4, 4);
   fanGeometry.translate(0, 0.575, 0);
@@ -495,7 +507,7 @@ export function buildReef(noise: Noise, uniforms: Uniforms, rnd: Rnd): THREE.Obj
       "uniform sampler2D uFanTex;",
     ),
   });
-  group.add(instanced(fanGeometry, fanMaterial, fans));
+  group.add(instanced(fanGeometry, fanMaterial, fansShown));
 
   return group;
 }

@@ -91,6 +91,8 @@ export type TierInputs = {
   hasVideo: boolean;
   hasMobileVideo: boolean;
   useFrames: boolean;
+  /** A poster frame from real footage exists. */
+  hasPoster: boolean;
   /** False once the 3D world has failed or proved too slow here. */
   worldAvailable: boolean;
   /** False once the 2D water scene has failed here. */
@@ -98,10 +100,11 @@ export type TierInputs = {
 };
 
 /** Picks the richest tier this browser should get. Call only in the browser. */
-export function chooseTier({ hasVideo, hasMobileVideo, useFrames, worldAvailable, sceneAvailable }: TierInputs): DescentTier {
+export function chooseTier({ hasVideo, hasMobileVideo, useFrames, hasPoster, worldAvailable, sceneAvailable }: TierInputs): DescentTier {
   if (connectionIsConstrained() || deviceIsLowEnd()) return "static";
   const world = worldAvailable && supportsWebGL2();
-  if (prefersReducedMotion()) return world ? "still" : "static";
+  // Without motion: a frame of real footage once it exists, else one frame of the world.
+  if (prefersReducedMotion()) return world && !hasPoster ? "still" : "static";
   if (useFrames) return "frames";
   if (isSmallScreen() ? hasMobileVideo : hasVideo) return "video";
   if (world) return "world";

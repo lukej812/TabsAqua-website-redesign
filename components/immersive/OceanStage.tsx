@@ -110,9 +110,18 @@ export function OceanStage({ media, useFrames, footageNote, endColor, art, diver
   let tier: DescentTier | null = null;
   const forced = hydrated ? overrides() : { tier: null, quality: null };
   if (hydrated) {
-    // `reduced` is read so a change of preference re-renders; chooseTier checks it.
-    void reduced;
-    tier = forced.tier ?? chooseTier({ hasVideo, hasMobileVideo, useFrames, worldAvailable: !worldFailed, sceneAvailable: !sceneFailed });
+    // A forced tier never overrides reduced motion: a moving tier asked for there stays still.
+    const honored = forced.tier && !(reduced && LIVE_TIERS.includes(forced.tier)) ? forced.tier : null;
+    tier =
+      honored ??
+      chooseTier({
+        hasVideo,
+        hasMobileVideo,
+        useFrames,
+        hasPoster: Boolean(media.poster),
+        worldAvailable: !worldFailed,
+        sceneAvailable: !sceneFailed,
+      });
   }
 
   // Load footage shortly before it is needed: soon after hydration, in idle time.
@@ -329,6 +338,8 @@ export function OceanStage({ media, useFrames, footageNote, endColor, art, diver
 
       stage.dataset.progress = state.progress.toFixed(3);
       stage.dataset.path = u.toFixed(3);
+      // The camera has caught up with the scroll (for tests and tooling).
+      stage.toggleAttribute("data-settled", Math.abs(target - current) < 0.5);
       stage.style.setProperty("--depth", state.depth.toFixed(3));
       stage.style.setProperty("--end", state.end.toFixed(3));
       stage.style.setProperty("--scrim", path.scrim.toFixed(3));
@@ -369,7 +380,9 @@ export function OceanStage({ media, useFrames, footageNote, endColor, art, diver
       // The 2D water only shows behind the surface and descent; the reef covers it after that.
       const renderer = rendererRef.current;
       if (renderer && current < descentEnd && (!phone || now - lastDraw >= SMALL_FRAME_MS - 1)) {
-        renderer.render({ time, scroll: state.depth, end: state.end });
+        // Once the reef's edge is on screen, how far up it has come, 0 to 1.
+        const edge = Math.min(1, Math.max(0, (current + stage.offsetHeight - descentEnd) / stage.offsetHeight));
+        renderer.render({ time, scroll: state.depth, end: state.end + (state.end >= 1 ? edge : 0) });
         lastDraw = now;
         if (firstPaint) {
           firstPaint = false;
@@ -377,8 +390,9 @@ export function OceanStage({ media, useFrames, footageNote, endColor, art, diver
         }
       }
 
-      scrubTo(path.footage);
-      drawAt(path.footage);
+      // Footage covers the surface to the reef, so it follows the descent's progress.
+      scrubTo(state.progress);
+      drawAt(state.progress);
 
       if (figure && shown === "scene") {
         const pose = diverPose(state, phone);
@@ -443,6 +457,7 @@ export function OceanStage({ media, useFrames, footageNote, endColor, art, diver
       window.removeEventListener("pageshow", onResize);
       delete stage.dataset.progress;
       delete stage.dataset.path;
+      stage.removeAttribute("data-settled");
       stage.style.removeProperty("--depth");
       stage.style.removeProperty("--end");
       stage.style.removeProperty("--scrim");

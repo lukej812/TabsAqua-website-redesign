@@ -1,11 +1,13 @@
 /**
- * The surface and the descent: the scroll mapping, the live water scene, every
- * fallback, text contrast over the moving water, and the optional footage.
+ * The surface and the descent: the scroll mapping, the lighter 2D water scene,
+ * every fallback, text contrast over the moving water, and the optional footage.
+ * The 3D world, the default tier, has its own file: tests/world.spec.ts.
  *
- * Port 3100 is the site as it ships today (no footage, so the live water
- * scene). Port 3101 is a build that treats the footage as present; these tests
- * serve synthetic fixtures from tests/fixtures/guided-descent at the media
- * paths (an ffmpeg test pattern, not footage).
+ * Port 3100 is the site as it ships today (no footage, so the 3D world, and the
+ * 2D scene with ?renderer=scene). Port 3101 is a build that treats the footage
+ * as present; these tests serve synthetic fixtures from
+ * tests/fixtures/guided-descent at the media paths (an ffmpeg test pattern, not
+ * footage).
  */
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -78,21 +80,25 @@ function watchErrors(page: Page) {
   return errors;
 }
 
-/** Scrolls so the stage sits at `progress` (0 to 1), measured the way OceanStage does. */
+/**
+ * Scrolls so the descent sits at `progress` (0 to 1), measured the way
+ * OceanStage does: from the top of the dive to the reef.
+ */
 async function scrollToProgress(page: Page, progress: number) {
   await page.evaluate((p) => {
     const dive = document.querySelector<HTMLElement>(".dive")!;
     const stage = dive.querySelector<HTMLElement>(".stage")!;
     const top = dive.getBoundingClientRect().top + window.scrollY;
-    const travel = dive.offsetHeight - stage.offsetHeight;
+    const reef = document.querySelector<HTMLElement>("#experiences")!.getBoundingClientRect().top + window.scrollY;
+    const travel = reef - top - stage.offsetHeight;
     window.scrollTo({ top: top + travel * p, behavior: "instant" });
   }, progress);
 }
 
-/** Waits for the smoothed camera to settle on `progress`. */
+/** Waits for the smoothed camera to settle on `progress`. The software-rendered 3D world draws about a frame a second. */
 async function settle(page: Page, progress: number) {
   await expect
-    .poll(async () => Number(await page.locator(".stage").getAttribute("data-progress")), { timeout: 5000 })
+    .poll(async () => Number(await page.locator(".stage").getAttribute("data-progress")), { timeout: 20_000 })
     .toBeCloseTo(progress, 1);
 }
 
@@ -306,17 +312,20 @@ test.describe("seek coordinator", () => {
 });
 
 /* ------------------------------------------------------------------ */
-/* As the site ships today: the live water scene                       */
+/* The 2D water scene: where the 3D world is too heavy                 */
 /* ------------------------------------------------------------------ */
 
-test.describe("the live water scene", () => {
+/** The lighter 2D water, which the world hands over to on slow devices. */
+const SCENE = "/?renderer=scene";
+
+test.describe("the 2D water scene", () => {
   test.use({ baseURL: SITE, viewport: { width: 1440, height: 900 } });
 
   test("renders, sticks under the content, and never requests footage", async ({ page }) => {
     const errors = watchErrors(page);
     const requests: string[] = [];
     page.on("request", (request) => requests.push(new URL(request.url()).pathname));
-    await page.goto("/");
+    await page.goto(SCENE);
     await waitForLive(page, "scene");
     await expect(page.locator(".stage")).toHaveAttribute("data-painted", "");
     await expect(page.locator(".stage canvas")).toBeVisible();
@@ -333,17 +342,23 @@ test.describe("the live water scene", () => {
     expect(errors).toEqual([]);
   });
 
-  test("lets the page continue after the descent, into the reef", async ({ page }) => {
-    await page.goto("/");
+  test("gives way to the reef's own water after the descent", async ({ page }) => {
+    await page.goto(SCENE);
     await waitForLive(page, "scene");
-    await page.locator("#experiences").scrollIntoViewIfNeeded();
-    const stageBottom = await page.locator(".stage").evaluate((el) => el.getBoundingClientRect().bottom);
-    const reefTop = await page.locator("#experiences").evaluate((el) => el.getBoundingClientRect().top);
-    expect(stageBottom).toBeLessThanOrEqual(reefTop + 1);
+    await page.locator("#experiences").evaluate((el) => el.scrollIntoView({ behavior: "instant" }));
+    // The 2D water only covers the surface and the descent. From the reef on,
+    // each zone paints its own water over the stage, and the flat reef shows.
+    const reef = await page.locator("#experiences").evaluate((el) => {
+      const before = getComputedStyle(el, "::before");
+      return { opacity: before.opacity, image: before.backgroundImage };
+    });
+    expect(reef.opacity).toBe("1");
+    expect(reef.image).toContain("gradient");
+    await expect(page.locator(".reef").first()).toBeVisible();
   });
 
   test("hands off to the reef without a visible seam", async ({ page }) => {
-    await page.goto("/");
+    await page.goto(SCENE);
     await waitForLive(page, "scene");
     await scrollToProgress(page, 1);
     await settle(page, 1);
@@ -378,8 +393,9 @@ test.describe("the live water scene", () => {
     test(`text over the water keeps its contrast at ${width}px, motion ${motion}`, async ({ browser }) => {
       const context = await browser.newContext({ baseURL: SITE, viewport: { width, height }, reducedMotion: motion });
       const page = await context.newPage();
-      await page.goto("/");
-      if (motion === "reduce") await expect(page.locator(".stage")).toHaveAttribute("data-tier", "static");
+      // Reduced motion keeps the stage still, even when the 2D scene is asked for.
+      await page.goto(SCENE);
+      if (motion === "reduce") await expect(page.locator(".stage")).toHaveAttribute("data-tier", "still");
       else await waitForLive(page, "scene");
       await page.waitForTimeout(800);
       // Large headline: 3:1. Everything else: 4.5:1.
@@ -413,13 +429,15 @@ test.describe("the live water scene", () => {
     expect(errors).toEqual([]);
   });
 
-  test("uses the still surface with reduced motion, and the steps read in normal flow", async ({ browser }) => {
+  test("uses one still frame with reduced motion, and the steps read in normal flow", async ({ browser }) => {
     const context = await browser.newContext({ baseURL: SITE, reducedMotion: "reduce", viewport: { width: 1440, height: 900 } });
     const page = await context.newPage();
     await page.goto("/");
     const stage = page.locator(".stage");
-    await expect(stage).toHaveAttribute("data-tier", "static");
-    await expect(page.locator(".stage canvas")).toHaveCount(0);
+    // One frame of the world, drawn once: nothing moves, and the stage is not pinned.
+    await expect(stage).toHaveAttribute("data-tier", "still");
+    await expect(stage).toHaveAttribute("data-painted", "");
+    await expect(stage).not.toHaveAttribute("data-live", "");
     expect(await stage.evaluate((el) => getComputedStyle(el).position)).toBe("relative");
     for (const step of descent.steps) {
       await expect(page.getByRole("heading", { name: step.title })).toBeVisible();
@@ -465,14 +483,14 @@ test.describe("the live water scene", () => {
         }
       }).observe({ type: "layout-shift", buffered: true });
     });
-    await page.goto("/");
+    await page.goto(SCENE);
     await waitForLive(page, "scene");
     await page.waitForTimeout(1000);
     expect(await page.evaluate(() => (window as unknown as { cls: number }).cls)).toBeLessThan(0.02);
   });
 
   test("stops drawing when the scene is off screen", async ({ page }) => {
-    await page.goto("/");
+    await page.goto(SCENE);
     await waitForLive(page, "scene");
     // Jump straight there: a smooth scroll would still be passing the stage.
     await page.locator("#faq").evaluate((el) => el.scrollIntoView({ behavior: "instant" }));
@@ -501,7 +519,7 @@ test.describe("the live water scene", () => {
   ]) {
     test(`screenshots the descent at ${viewport.width}x${viewport.height}`, async ({ page }) => {
       await page.setViewportSize(viewport);
-      await page.goto("/");
+      await page.goto(SCENE);
       await waitForLive(page, "scene");
       for (const p of [0, 0.25, 0.5, 0.75, 1]) {
         await scrollToProgress(page, p);
@@ -617,10 +635,10 @@ test.describe("with footage", () => {
     await expect.poll(async () => (await videoState(page)).src).toMatch(/guided-descent\.mp4$/);
   });
 
-  test("switches to the live water when both video sources fail", async ({ page }) => {
+  test("switches to the 3D world when both video sources fail", async ({ page }) => {
     await serveMedia(page, ["/video/guided-descent.mp4", "/video/guided-descent.webm"]);
     await page.goto("/");
-    await waitForLive(page, "scene");
+    await waitForLive(page, "world");
     await expect(page.locator(".stage video")).toHaveCount(0);
     await scrollToProgress(page, 0.8);
     await settle(page, 0.8);

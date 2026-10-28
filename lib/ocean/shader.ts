@@ -28,7 +28,7 @@ precision mediump float;
 uniform vec2 uRes;       // drawing buffer size, in pixels
 uniform float uTime;     // seconds, wrapped
 uniform float uScroll;   // how far the camera has sunk, in screen heights
-uniform float uEnd;      // 0 to 1: blend the bottom of the frame into uEndColor
+uniform float uEnd;      // 0 to 1: blend the bottom into uEndColor; 1 to 2: the reef's edge is (uEnd - 1) up the frame
 uniform vec3 uEndColor;  // the color of the section that follows the stage
 uniform float uSunX;     // sun position, 0 to 1 across the width
 uniform float uWater;    // waterline height at rest, 0 (bottom) to 1 (top)
@@ -170,7 +170,12 @@ void main() {
   // Soft vignette, and the hand-off to the next section's color.
   vec2 v = (uv - 0.5) * vec2(1.0, 0.85);
   col *= 1.0 - 0.22 * dot(v, v) * 2.0;
-  col = mix(col, uEndColor, uEnd * smoothstep(0.6, 0.0, uv.y));
+  // The hand-off to the reef: the bottom of the frame first, then everything
+  // below the reef's edge as it rises, so the edge always meets the same color.
+  float handoff = min(uEnd, 1.0) * smoothstep(0.6, 0.0, uv.y);
+  float edge = uEnd - 1.0;
+  if (edge > 0.0) handoff = max(handoff, smoothstep(edge + 0.3, edge, uv.y));
+  col = mix(col, uEndColor, handoff);
 
   // Dither so the deep gradients never band.
   col += (hash(gl_FragCoord.xy + fract(t)) - 0.5) / 255.0;

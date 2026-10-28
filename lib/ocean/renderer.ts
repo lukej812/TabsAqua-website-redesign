@@ -5,7 +5,10 @@ export type OceanFrame = {
   time: number;
   /** How far the camera has sunk, in screen heights. */
   scroll: number;
-  /** 0 to 1: blend the bottom of the frame into the end color. */
+  /**
+   * 0 to 1: blend the bottom of the frame into the end color. 1 to 2: the reef's
+   * edge is on screen, (end - 1) of the way up; everything below it is end color.
+   */
   end: number;
 };
 

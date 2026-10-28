@@ -25,6 +25,10 @@ for (const width of WIDTHS) {
         clientWidth: document.documentElement.clientWidth,
       }));
       expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+      // Layout captures use the static drawing: asking the software renderer for a
+      // 6000px-tall 3D world takes minutes. tests/world.spec.ts captures the world shot by shot.
+      await page.goto("/?renderer=static");
+      await revealAll(page);
       // Saved in parts: software-rendered browsers repeat tiles past 8192px in one capture.
       const height = await page.evaluate(() => document.documentElement.scrollHeight);
       for (let y = 0, part = 1; y < height; y += 6000, part++) {
@@ -157,10 +161,11 @@ test.describe("with reduced motion", () => {
         .evaluate((el) => getComputedStyle(el).animationName);
       expect(animation, selector).toBe("none");
     }
+    // One still frame of the world, not pinned, and no footage.
     const stage = page.locator(".stage");
-    await expect(stage).toHaveAttribute("data-tier", "static");
+    await expect(stage).toHaveAttribute("data-tier", "still");
     await expect(stage).not.toHaveAttribute("data-live", "");
-    await expect(page.locator(".stage canvas, .stage video")).toHaveCount(0);
+    await expect(page.locator(".stage video")).toHaveCount(0);
     // Nothing is held back for a reveal.
     await expect(page.locator('[data-reveal="pending"]')).toHaveCount(0);
   });
